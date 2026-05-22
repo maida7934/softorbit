@@ -1,0 +1,33 @@
+.outer {
+  height: 400vh;
+  position: relative;
+}
+
+.sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #05060f;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+}
+
+.orbitLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.paraLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
