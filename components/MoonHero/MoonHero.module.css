@@ -32,3 +32,239 @@
   pointer-events: none;
   overflow: visible;
 }
+
+/* ══════════════════════════════════════════════════
+   Section 2: Text on the LEFT (moon is on right)
+   ══════════════════════════════════════════════════ */
+.section2Text {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding-left: 64px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: none;
+}
+
+/* ══════════════════════════════════════════════════
+   Section 3: Text on the RIGHT (moon is on left)
+   ══════════════════════════════════════════════════ */
+.section3Text {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding-right: 64px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  text-align: right;
+  transition: none;
+}
+
+/* ── Shared text line styles ── */
+.sectionLine {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 700;
+  color: #f7eef7;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  text-shadow:
+    0 0 40px rgba(255, 209, 220, 0.15),
+    0 0 80px rgba(225, 232, 224, 0.08);
+  margin: 0;
+  padding: 0;
+}
+
+.sectionLine:nth-child(1) {
+  font-size: clamp(64px, 10vw, 140px);
+}
+
+.sectionLine:nth-child(2) {
+  font-size: clamp(52px, 8vw, 112px);
+  opacity: 0.88;
+}
+
+.sectionLine:nth-child(3) {
+  font-size: clamp(40px, 6vw, 88px);
+  opacity: 0.72;
+  font-family: var(--font-pinyon), cursive;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* ── Accent lines ── */
+.section2Accent {
+  margin-top: 24px;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 209, 220, 0.6) 0%,
+    rgba(225, 232, 224, 0.3) 100%
+  );
+  border-radius: 1px;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.section3Accent {
+  margin-top: 24px;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(225, 232, 224, 0.3) 0%,
+    rgba(255, 209, 220, 0.6) 100%
+  );
+  border-radius: 1px;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: right center;
+}
+
+/* ══════════════════════════════════════════════════
+   Section 4: Floating Cards Layer
+   ══════════════════════════════════════════════════ */
+.cardsLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.cardContainer {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+}
+
+/* Odd cards on left, Even cards on right */
+.cardContainer.left {
+  left: 0;
+  padding-right: 15%; /* Keep away from center moon */
+}
+.cardContainer.right {
+  right: 0;
+  padding-left: 15%;
+}
+
+.card {
+  position: relative;
+  width: 280px;
+  height: 380px;
+  border-radius: 24px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 24px 48px -12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(100vh);
+}
+
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.15) 50%,
+    rgba(0, 0, 0, 0.0) 100%
+  );
+  border-radius: 24px;
+}
+
+.cardContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  padding: 32px;
+}
+
+.cardTitle {
+  font-family: var(--font-cormorant), serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.cardDesc {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+}
+
+/* ── Mobile adjustments ── */
+@media (max-width: 767px) {
+  .section2Text {
+    width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 10%;
+    justify-content: flex-start;
+  }
+
+  .section3Text {
+    width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 10%;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  .sectionLine:nth-child(1) {
+    font-size: clamp(40px, 12vw, 72px);
+  }
+
+  .sectionLine:nth-child(2) {
+    font-size: clamp(32px, 10vw, 56px);
+  }
+
+  .sectionLine:nth-child(3) {
+    font-size: clamp(24px, 7vw, 44px);
+  }
+
+  .cardContainer {
+    width: 100%;
+  }
+  .cardContainer.left {
+    padding-right: 0;
+    align-items: flex-start;
+    padding-top: 10vh;
+  }
+  .cardContainer.right {
+    padding-left: 0;
+    align-items: flex-end;
+    padding-top: 10vh;
+  }
+  .card {
+    width: 200px;
+    height: 280px;
+  }
+}
