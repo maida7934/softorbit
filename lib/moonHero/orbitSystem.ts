@@ -1,77 +1,133 @@
-import { WordElement } from './wordElement';
-import { lerp, phaseProgress } from './math';
-import type { MoonScreenState, WordConfig, WordDestination } from './types';
+import { lerp, clamp, easeInOut } from './math';
+import { PHASES } from './types';
+import type { WordDestination } from './destinationCalc';
+import type { MoonScreenState } from './projectionUtils';
 
-const ORBIT_RATIO    = 1.35; // orbit radius = moonRadius * this
-const SPIN_ROTATIONS = 1.5;  // full orbits across entire scroll
-const FONT_MIN       = 11;
-const FONT_MAX       = 17;
+export interface OrbitWord {
+  text: string;
+  index: number;
+}
+
+const FONT_MIN = 15;
+const FONT_MAX = 24;
 
 export class OrbitSystem {
-  private words: WordElement[] = [];
-  private n:     number;
+  private words: OrbitWord[];
+  private container: HTMLElement;
+  private spans: HTMLElement[] = [];
+  private destinations: WordDestination[] = [];
+  private orbitAngle = 0;
 
-  constructor(configs: WordConfig[], container: HTMLElement) {
-    this.words = configs.map(
-      (c) => new WordElement(c.text, c.index, container)
-    );
-    this.n = configs.length;
+  // Orbit ellipse proportions relative to moon radius
+  private readonly ORB_RX_MULT = 1.55;
+  private readonly ORB_RY_MULT = 0.44;
+  private readonly ORBIT_SPEED = 0.007; // radians per frame at 60fps
+
+  constructor(words: OrbitWord[], container: HTMLElement) {
+    this.words = words;
+    this.container = container;
+    this.container.innerHTML = ''; // Clear orphaned spans from StrictMode
+    this.spans = words.map((w) => this.createSpan(w.text, w.index));
   }
 
-  setDestinations(destinations: WordDestination[]): void {
-    destinations.forEach((dest, i) => {
-      if (this.words[i]) this.words[i].dest = dest;
+  private createSpan(text: string, index: number): HTMLElement {
+    const el = document.createElement('span');
+    el.textContent = text;
+    
+    // First 3 words are bold Cormorant, rest are Pinyon Script
+    const isHighlight = index < 3;
+    const fontFamily = isHighlight ? 'var(--font-cormorant), serif' : 'var(--font-pinyon), cursive';
+    const fontWeight = isHighlight ? '700' : '400';
+    // Pinyon script runs small, so we bump its relative scale
+    const scaleTransform = isHighlight ? 'translate(-50%, -50%)' : 'translate(-50%, -50%) scale(1.3)';
+    
+    el.style.cssText = `
+      position: absolute;
+      font-family: ${fontFamily};
+      font-weight: ${fontWeight};
+      color: #f7eef7;
+      text-shadow: 0 0 14px rgba(95, 73, 73, 0.65);
+      white-space: nowrap;
+      transform: ${scaleTransform};
+      pointer-events: none;
+      will-change: transform, opacity, font-size;
+      opacity: 0;
+      font-size: 16px;
+    `;
+    this.container.appendChild(el);
+    return el;
+  }
+
+  setDestinations(dests: WordDestination[]): void {
+    this.destinations = dests;
+  }
+
+  /**
+   * Called every frame from the rAF loop.
+   * @param scrollProgress  0→1
+   * @param moonState       current moon screen position + radius
+   */
+  update(scrollProgress: number, moonState: MoonScreenState): void {
+    this.orbitAngle += this.ORBIT_SPEED;
+
+    const { x: mcx, y: mcy, radius: R } = moonState;
+    const n = this.words.length;
+
+    const orbitFontSize = lerp(FONT_MIN, FONT_MAX, clamp(scrollProgress * 2, 0, 1));
+
+    this.spans.forEach((span, i) => {
+      const orbitAngle = this.orbitAngle * 0.66 + (i / n) * Math.PI * 2;
+      const orbX = mcx + R * this.ORB_RX_MULT * Math.cos(orbitAngle);
+      const orbY = mcy + R * this.ORB_RY_MULT * Math.sin(orbitAngle);
+      const zDepth = Math.sin(orbitAngle); // -1 = behind moon, +1 = in front
+
+      const wordPeelStart =
+        PHASES.PEEL_START + (i / n) * (PHASES.PEEL_SPACING * n);
+      const wordPeelEnd = wordPeelStart + PHASES.PEEL_DURATION;
+      const peelRaw = clamp(
+        (scrollProgress - wordPeelStart) / (wordPeelEnd - wordPeelStart),
+        0,
+        1
+      );
+      const peelT = easeInOut(peelRaw);
+
+      const dst = this.destinations[i] ?? { x: mcx, y: mcy - R - 20, fontSize: 40 };
+
+      const wx = lerp(orbX, dst.x, peelT);
+      const wy = lerp(orbY, dst.y, peelT);
+      const fs = lerp(orbitFontSize, dst.fontSize, peelT);
+
+      // Hide when passing behind the moon
+      let alpha = 1;
+      if (peelRaw < 0.12 && zDepth < 0) {
+        const dx = wx - mcx;
+        const dy = wy - mcy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const hideEdge = R - fs * 0.4;
+        const showEdge = R + fs * 0.6;
+        alpha = clamp((dist - hideEdge) / (showEdge - hideEdge), 0, 1);
+      }
+
+      // Appear only after moon is visible (small R means nothing to see yet)
+      const appear = clamp((R - 30) / 50, 0, 1);
+      alpha *= appear;
+
+      span.style.left = `${wx}px`;
+      span.style.top = `${wy}px`;
+      span.style.fontSize = `${Math.round(fs)}px`;
+      span.style.opacity = `${alpha}`;
     });
   }
 
-  update(scrollProgress: number, moon: MoonScreenState): void {
-    const orbitRadius   = moon.radius * ORBIT_RATIO;
-    const orbitFontSize = lerp(FONT_MIN, FONT_MAX, phaseProgress(scrollProgress, 0, 0.5));
-
-    // Fade in at start
-    const entryOpacity = phaseProgress(scrollProgress, 0, 0.08);
-
-    this.words.forEach((word, i) => {
-      const baseAngle = (i / this.n) * Math.PI * 2 - Math.PI / 2;
-      const spin      = scrollProgress * Math.PI * 2 * SPIN_ROTATIONS;
-      const angle     = baseAngle + spin;
-
-      const orbitX = moon.x + Math.cos(angle) * orbitRadius;
-      const orbitY = moon.y + Math.sin(angle) * orbitRadius;
-
-      if (word.state === 'orbit' && !word.shouldPeel(scrollProgress)) {
-        word.updateOrbit(orbitX, orbitY, angle, orbitFontSize);
-        // Apply entry fade on top
-        if (scrollProgress < 0.08) {
-          word.el.style.opacity = String(
-            parseFloat(word.el.style.opacity) * entryOpacity
-          );
-        }
-        return;
-      }
-
-      if (word.state !== 'landed') {
-        word.state = 'flying';
-        if (word.hasLanded(scrollProgress)) {
-          word.land();
-        } else {
-          // Store last orbit position before peel for smooth handoff
-          word.orbitX = orbitX;
-          word.orbitY = orbitY;
-          word.updatePeel(scrollProgress);
-        }
-      }
-    });
-  }
-
-  fadeOutAll(opacity: number): void {
-    this.words.forEach((w) => {
-      w.el.style.opacity = String(opacity);
+  /** Fade all spans to a given alpha (used during crossfade) */
+  fadeOutAll(alpha: number): void {
+    this.spans.forEach((s) => {
+      s.style.opacity = `${Math.max(0, parseFloat(s.style.opacity || '1') * alpha)}`;
     });
   }
 
   destroy(): void {
-    this.words.forEach((w) => w.remove());
-    this.words = [];
+    this.spans.forEach((s) => s.remove());
+    this.spans = [];
   }
 }

@@ -5,53 +5,49 @@ import { createScene, handleResize } from '@/lib/moonHero/sceneSetup';
 import { loadMoon } from '@/lib/moonHero/moonLoader';
 import { MoonController } from '@/lib/moonHero/moonController';
 import { OrbitSystem } from '@/lib/moonHero/orbitSystem';
-import { ParagraphBlock } from '@/lib/moonHero/paragraphBlock';
-import type { ParagraphConfig } from '@/lib/moonHero/paragraphBlock';
-import { createScrollDriver } from '@/lib/moonHero/scrollDriver';
+import { FluidTrail } from '@/lib/moonHero/fluidTrail';
 import { getMoonScreenState } from '@/lib/moonHero/projectionUtils';
 import { computeDestinations } from '@/lib/moonHero/destinationCalc';
 import { phaseProgress, easeInOut } from '@/lib/moonHero/math';
 import { PHASES } from '@/lib/moonHero/types';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 import styles from './MoonHero.module.css';
 
 // ── CONFIG ────────────────────────────────────────────────────
 const ALL_ORBIT_WORDS = [
-  'We', 'build', 'digital', 'experiences',
-  'that', 'illuminate', 'brands', 'and', 'move', 'people',
+  'Built', 'around', 'motion,', 'where', 'everything',
+  'stays', 'in', 'a', 'state', 'of', 'becoming',
 ];
 
 const ALL_PARA_LINES: string[][] = [
-  ['We', 'build', 'digital'],
-  ['experiences', 'that', 'illuminate'],
-  ['brands', 'and', 'move', 'people'],
+  ['Built', 'around', 'motion,'],
+  ['where', 'everything', 'stays'],
+  ['in', 'a', 'state', 'of', 'becoming'],
 ];
 
-const ALL_PARA_FONT_SIZES = [18, 14, 14];
+const ALL_PARA_FONT_SIZES = [64, 48, 48];
 
-const PARA_CONFIG: ParagraphConfig = {
-  lines: [
-    { text: 'We build digital',        fontSize: 18, opacity: 1.0,  weight: 700 },
-    { text: 'experiences that',        fontSize: 14, opacity: 0.85, weight: 400 },
-    { text: 'illuminate brands',       fontSize: 14, opacity: 0.85, weight: 400 },
-    { text: 'and move people.',        fontSize: 14, opacity: 0.70, weight: 400 },
-  ],
-};
-
-// Mobile: first 6 words → first 2 lines
-const MOBILE_ORBIT_WORDS = ALL_ORBIT_WORDS.slice(0, 6);
+// Mobile: first 7 words → first 2 lines
+const MOBILE_ORBIT_WORDS = ALL_ORBIT_WORDS.slice(0, 7);
 
 const MOBILE_PARA_LINES: string[][] = [
-  ['We', 'build', 'digital'],
-  ['experiences', 'that', 'illuminate'],
+  ['Built', 'around', 'motion,'],
+  ['where', 'everything', 'stays', 'in'],
 ];
 
-const MOBILE_PARA_FONT_SIZES = [16, 13];
+const MOBILE_PARA_FONT_SIZES = [50, 40];
 
-const MOBILE_PARA_CONFIG: ParagraphConfig = {
-  lines: [
-    { text: 'We build digital',        fontSize: 16, opacity: 1.0,  weight: 700 },
-    { text: 'experiences that illuminate', fontSize: 13, opacity: 0.85, weight: 400 },
-  ],
+const PARA_CONFIG = {
+  lines: ALL_PARA_LINES,
+  fontSizes: ALL_PARA_FONT_SIZES,
+};
+
+const MOBILE_PARA_CONFIG = {
+  lines: MOBILE_PARA_LINES,
+  fontSizes: MOBILE_PARA_FONT_SIZES,
 };
 // ─────────────────────────────────────────────────────────────
 
@@ -88,16 +84,26 @@ export default function MoonHero() {
     let lastTime = performance.now();
     let moonController: MoonController | null = null;
     let orbitSystem:    OrbitSystem    | null = null;
-    let paraBlock:      ParagraphBlock | null = null;
+
+    // ── Fluid trail (separate 2D canvas) ───────────────
+    const fluidTrail = new FluidTrail(sticky);
 
     // ── Scroll driver ──────────────────────────────────────
-    const killScroll = createScrollDriver(outer, (p) => {
-      scrollProgress = p;
+    const trigger = ScrollTrigger.create({
+      trigger: outer,
+      start: 'top top',
+      end: '+=800%', // Increased from 400% to give much more scroll distance at the end
+      pin: true,
+      scrub: true,
+      onUpdate: (self) => {
+        scrollProgress = self.progress;
+      }
     });
 
     // ── Resize ─────────────────────────────────────────────
     const onResize = () => {
       handleResize(sceneRefs);
+      fluidTrail.resize();
       if (moonController) {
         moonController.updateBreakpoint();
       }
@@ -127,7 +133,7 @@ export default function MoonHero() {
         );
 
         // Pass ORBIT_WORDS.length — never hardcoded
-        paraBlock = new ParagraphBlock(paraLayer, paraConfig, ORBIT_WORDS.length);
+        // ParagraphBlock is removed because OrbitSystem words now stay as the final text.
 
         // Initial destinations (moon at scroll=0 position)
         const initState = getMoonScreenState(moon, camera, renderer);
@@ -147,29 +153,18 @@ export default function MoonHero() {
           moonController!.update(scrollProgress, dt);
 
           const moonState = getMoonScreenState(moon, camera, renderer);
-
-          // Orbit words
-          if (scrollProgress < PHASES.CROSSFADE_END - 0.08) {
-            orbitSystem!.update(scrollProgress, moonState);
+          
+          // Debug log to confirm moonState values are sane
+          if (Math.random() < 0.05) { // log roughly 3 times a second instead of 60
+             console.log('[Tick Debug] moonState:', Math.round(moonState.x), Math.round(moonState.y), Math.round(moonState.radius));
           }
 
-          // Crossfade: word spans → paragraph div
-          const allLandedAt = PHASES.PEEL_START
-            + (ORBIT_WORDS.length - 1) * PHASES.PEEL_SPACING
-            + PHASES.PEEL_DURATION;
+          // Orbit words now just animate to their destinations and stay there forever
+          orbitSystem!.update(scrollProgress, moonState);
 
-          if (scrollProgress > allLandedAt) {
-            const fadeT = easeInOut(
-              phaseProgress(scrollProgress, allLandedAt, PHASES.CROSSFADE_END)
-            );
-            orbitSystem!.fadeOutAll(1 - fadeT);
-            const blockHeight = paraBlock!.el.offsetHeight || 120;
-            paraBlock!.update(
-              scrollProgress,
-              moonState.y - moonState.radius,
-              blockHeight
-            );
-          }
+          // Fluid trail — feed it the moon zone and tick
+          fluidTrail.setMoonZone({ x: moonState.x, y: moonState.y, radius: moonState.radius });
+          fluidTrail.update(dt);
 
           renderer.render(scene, camera);
         }
@@ -182,10 +177,10 @@ export default function MoonHero() {
     // ── Cleanup ────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(rafId);
-      killScroll();
+      trigger.kill();
       window.removeEventListener('resize', onResize);
       orbitSystem?.destroy();
-      paraBlock?.remove();
+      fluidTrail.destroy();
       renderer.dispose();
     };
   }, []);

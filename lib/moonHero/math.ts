@@ -1,14 +1,27 @@
-export const lerp = (a: number, b: number, t: number): number =>
-  a + (b - a) * t;
+export function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
 
-export const clamp = (v: number, min: number, max: number): number =>
-  Math.max(min, Math.min(max, v));
+export function clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
 
-export const easeInOut = (t: number): number =>
-  t < 0.5 ? 2 * t * t : (4 - 2 * t) * t - 1;
+export function easeInOut(t: number): number {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
 
-export const phaseProgress = (
-  p: number,
+export function easeOut3(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
+
+/**
+ * Maps globalProgress through a sub-phase window [start, start+duration]
+ * Returns 0→1 clamped within that window.
+ */
+export function phaseProgress(
+  globalP: number,
   start: number,
   end: number
-): number => clamp((p - start) / (end - start), 0, 1);
+): number {
+  return clamp((globalP - start) / (end - start), 0, 1);
+}

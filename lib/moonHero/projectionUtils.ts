@@ -1,30 +1,43 @@
 import * as THREE from 'three';
-import type { MoonScreenState } from './types';
 
-const _worldPos  = new THREE.Vector3();
-const _edgePos   = new THREE.Vector3();
+export interface MoonScreenState {
+  /** CSS pixel x of moon centre relative to canvas top-left */
+  x: number;
+  /** CSS pixel y of moon centre relative to canvas top-left */
+  y: number;
+  /** Apparent radius in CSS pixels */
+  radius: number;
+}
 
 export function getMoonScreenState(
-  moon:     THREE.Group,
-  camera:   THREE.PerspectiveCamera,
-  renderer: THREE.WebGLRenderer,
+  moon: THREE.Group,
+  camera: THREE.Camera,
+  renderer: THREE.WebGLRenderer
 ): MoonScreenState {
-  moon.getWorldPosition(_worldPos);
+  // Compute true world-space bounding box to find the visual center.
+  // This handles the case where moon.position was reset to 0,0,0 losing its offset.
+  const box = new THREE.Box3().setFromObject(moon);
+  const worldPos = box.getCenter(new THREE.Vector3());
 
-  // Project centre
-  const projected = _worldPos.clone().project(camera);
-  const W = renderer.domElement.clientWidth;
-  const H = renderer.domElement.clientHeight;
-  const cx = (projected.x *  0.5 + 0.5) * W;
-  const cy = (projected.y * -0.5 + 0.5) * H;
+  // Project to NDC
+  const ndc = worldPos.clone().project(camera);
 
-  // Project a point offset by the moon's current world-space radius
-  // moon.scale.x === normalised scale, so world radius ≈ 0.5 * scale
-  const worldRadius = 0.5 * moon.scale.x;
-  _edgePos.copy(_worldPos).add(new THREE.Vector3(worldRadius, 0, 0));
-  const projectedEdge = _edgePos.clone().project(camera);
-  const ex = (projectedEdge.x * 0.5 + 0.5) * W;
-  const screenRadius = Math.abs(ex - cx);
+  const canvas = renderer.domElement;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
 
-  return { x: cx, y: cy, radius: screenRadius };
+  const x = (ndc.x * 0.5 + 0.5) * w;
+  const y = (-ndc.y * 0.5 + 0.5) * h;
+
+  // Use the true bounding box size for the radius
+  const size = box.getSize(new THREE.Vector3());
+  const scaledR = Math.max(size.x, size.y, size.z) / 2;
+
+  const edgeWorld = worldPos.clone().add(new THREE.Vector3(scaledR, 0, 0));
+  const edgeNDC = edgeWorld.clone().project(camera);
+  const edgeX = (edgeNDC.x * 0.5 + 0.5) * w;
+
+  const radius = Math.abs(edgeX - x);
+
+  return { x, y, radius };
 }

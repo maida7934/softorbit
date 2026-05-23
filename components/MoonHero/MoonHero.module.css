@@ -1,33 +1,34 @@
 .outer {
-  height: 400vh;
+  height: 100vh;
   position: relative;
 }
 
 .sticky {
-  position: sticky;
-  top: 0;
+  position: relative;
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  background: #05060f;
+  background: #353c41; /* Sage green */
 }
 
 .canvas {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .orbitLayer {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 6;
+  overflow: visible;
 }
 
 .paraLayer {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 20;
+  overflow: visible;
 }

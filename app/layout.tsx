@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, Pinyon_Script } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const pinyon = Pinyon_Script({
+  variable: "--font-pinyon",
   subsets: ["latin"],
+  weight: ["400"],
 });
 
 export const metadata: Metadata = {
@@ -18,14 +20,23 @@ export const metadata: Metadata = {
     "A fullscreen scroll-driven hero section with a 3D moon, orbiting text, and cinematic animations.",
 };
 
+import Navbar from "@/components/Navbar/Navbar";
+
+import LenisProvider from "@/components/LenisProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={`${cormorant.variable} ${pinyon.variable}`}>
+      <body>
+        <LenisProvider>
+          <Navbar />
+          {children}
+        </LenisProvider>
+      </body>
     </html>
   );
 }

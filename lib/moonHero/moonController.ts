@@ -16,7 +16,7 @@ export class MoonController {
 
     // Apply immediately so first frame is correct
     this.mesh.scale.setScalar(this.targetScale);
-    this.mesh.position.set(0, 0, 0);
+    this.mesh.position.set(0, -1.0, 0);
 
     console.log('[MoonController] nativeRadius:', nativeRadius.toFixed(4));
     console.log('[MoonController] targetScale:', this.targetScale.toFixed(4));
@@ -52,11 +52,15 @@ export class MoonController {
     this.targetScale = this.computeScale();
   }
 
-  update(_scrollProgress: number, dt: number): void {
+  update(scrollProgress: number, dt: number): void {
     // Rotation only — no scroll yet
     this.rotation += ROT_SPEED * dt * 60;
     this.mesh.rotation.y = this.rotation;
-    this.mesh.scale.setScalar(this.targetScale);
-    this.mesh.position.set(0, 0, 0);
+    
+    // Scale up to 1.5x as user scrolls (reduced from 2.5x to keep it in frame)
+    const forwardScale = this.targetScale + (this.targetScale * 0.5 * scrollProgress);
+    this.mesh.scale.setScalar(forwardScale);
+    
+    this.mesh.position.set(0, -1.0, 0);
   }
 }

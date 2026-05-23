@@ -1,19 +1,25 @@
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
+/**
+ * Attaches a scroll listener to `outer` and drives progress 0→1
+ * based on how far the user has scrolled through the sticky section.
+ *
+ * Returns a cleanup function — call it on unmount.
+ */
 export function createScrollDriver(
-  triggerEl:  HTMLElement,
+  outer: HTMLElement,
   onProgress: (p: number) => void
 ): () => void {
-  gsap.registerPlugin(ScrollTrigger);
+  function handleScroll() {
+    const scrollTop = window.scrollY;
+    const outerTop = outer.getBoundingClientRect().top + window.scrollY;
+    // scrollable distance = outer height - viewport height
+    const scrollable = outer.offsetHeight - window.innerHeight;
+    if (scrollable <= 0) { onProgress(0); return; }
+    const raw = (scrollTop - outerTop) / scrollable;
+    onProgress(Math.max(0, Math.min(1, raw)));
+  }
 
-  const st = ScrollTrigger.create({
-    trigger:  triggerEl,
-    start:    'top top',
-    end:      'bottom bottom',
-    scrub:    1.2,
-    onUpdate: (self) => onProgress(self.progress),
-  });
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  handleScroll(); // initialise
 
-  return () => st.kill();
+  return () => window.removeEventListener('scroll', handleScroll);
 }

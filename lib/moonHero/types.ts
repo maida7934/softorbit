@@ -6,41 +6,19 @@ export interface SceneRefs {
   camera:   THREE.PerspectiveCamera;
 }
 
-export interface MoonScreenState {
-  x:      number;
-  y:      number;
-  radius: number;
-}
+export const PHASES = {
+  /** Scroll progress at which first word begins peeling off orbit */
+  PEEL_START: 0.25,
 
-export interface WordConfig {
-  text:     string;
-  index:    number;
-}
+  /** Each successive word starts this much later */
+  PEEL_SPACING: 0.035,
 
-export interface WordDestination {
-  x:        number;
-  y:        number;
-  fontSize: number;
-}
+  /** How long a single word's travel from orbit → destination takes (in progress units) */
+  PEEL_DURATION: 0.15,
 
-export interface ParagraphLine {
-  words:    string[];
-  fontSize: number;  // px
-  opacity:  number;  // 0–1
-}
+  /** Progress at which orbit word spans begin cross-fading out */
+  CROSSFADE_START: 0.65,
 
-export interface AnimationPhases {
-  GROW_END:       number;
-  PEEL_START:     number;
-  PEEL_SPACING:   number;
-  PEEL_DURATION:  number;
-  CROSSFADE_END:  number;
-}
-
-export const PHASES: AnimationPhases = {
-  GROW_END:      0.50,   // was 0.85
-  PEEL_START:    0.38,   // was 0.32 — start peel slightly earlier
-  PEEL_SPACING:  0.055,
-  PEEL_DURATION: 0.10,
-  CROSSFADE_END: 0.92,
-};
+  /** Progress at which cross-fade completes and paragraph div is fully visible */
+  CROSSFADE_END: 0.75,
+} as const;

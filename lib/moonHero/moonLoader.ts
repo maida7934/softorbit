@@ -38,6 +38,7 @@ export function loadMoon(
       // Pass the native half-extent to MoonController so it can
       // compute the correct scale to fill a target % of screen.
       const nativeRadius = maxDim / 2;
+      moon.userData.nativeRadius = nativeRadius;
 
       // Fix texture colour space
       moon.traverse((child) => {
