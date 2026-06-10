@@ -12,6 +12,7 @@
   overflow: hidden;
   background: #45464c;
   z-index: 1;
+  perspective: 1000px;
 }
 
 .moonWrapper {
@@ -39,6 +40,32 @@
   overflow: visible;
   z-index: 20;
 }
+
+.heroTitleLayer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 5;
+  transform-style: preserve-3d;
+}
+
+.heroTitleLine {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 700;
+  font-size: clamp(120px, 22vw, 380px);
+  line-height: 0.85;
+  color: rgba(255, 255, 255, 0.08);
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
 
 .paraLayer {
   position: absolute;
@@ -69,27 +96,116 @@
 }
 
 /* ══════════════════════════════════════════════════
-   Section 3: Text on the RIGHT (moon is on left)
+   Section 3: Complex layout on RIGHT
    ══════════════════════════════════════════════════ */
-.section3Text {
+.section3Content {
   position: absolute;
   right: 0;
   top: 0;
-  width: 50%;
+  width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  padding-right: 64px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding-top: 14vh;
+  /* pushed down to avoid navbar */
   pointer-events: none;
   z-index: 20;
   opacity: 0;
-  text-align: right;
   transition: none;
 }
 
-/* ── Shared text line styles ── */
+.section3Header {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 22px;
+}
+
+.section3HeadingTop {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 700;
+  font-size: clamp(34px, 4vw, 40px);
+  color: #d1c8cb;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-shadow: 0 0 40px rgba(255, 209, 220, 0.1);
+  opacity: 0;
+  align-self: flex-end;
+  padding-right: 64px;
+}
+
+.section3HeadingBottom {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 700;
+  font-size: clamp(48px, 7vw, 96px);
+  color: #d1c8cb;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-shadow: 0 0 40px rgba(255, 209, 220, 0.1);
+  opacity: 0;
+  width: 100%;
+  text-align: right;
+  padding-right: 64px;
+}
+
+.section3Body {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding-right: 64px;
+}
+
+.section3GridCol {
+  width: 50%;
+  /* right half */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  opacity: 0;
+}
+
+.gridText {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+
+  padding: 16px;
+
+}
+
+.gridImage {
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  aspect-ratio: 2 / 1;
+  /* keeping heights contained and equal */
+}
+
+.gridImage:nth-of-type(2) {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+}
+
+.gridImage:nth-of-type(3) {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+}
+
+.gridImage:nth-of-type(4) {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+}
+
+/* ── Shared text line styles (for Section 2) ── */
 .sectionLine {
   font-family: var(--font-cormorant), serif;
   font-weight: 700;
@@ -243,13 +359,30 @@
     justify-content: flex-start;
   }
 
-  .section3Text {
+  .section3Content {
     width: 100%;
     padding-left: 24px;
     padding-right: 24px;
     padding-bottom: 10%;
-    justify-content: flex-end;
-    align-items: flex-end;
+  }
+
+  .section3HeadingTop {
+    align-self: flex-start;
+    padding-right: 0;
+    font-size: clamp(20px, 5vw, 32px);
+  }
+
+  .section3HeadingBottom {
+    font-size: clamp(32px, 8vw, 48px);
+    text-align: left;
+  }
+
+  .section3Body {
+    padding-right: 0;
+  }
+
+  .section3GridCol {
+    width: 100%;
   }
 
   .sectionLine:nth-child(1) {

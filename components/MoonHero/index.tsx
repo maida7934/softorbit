@@ -58,6 +58,7 @@ const CARDS_DATA = [
 export default function MoonHero() {
   const outerRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
+  const heroTitleRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const orbitRef = useRef<HTMLDivElement>(null);
   const paraRef = useRef<HTMLDivElement>(null);
@@ -171,6 +172,41 @@ export default function MoonHero() {
           // ── Update background color based on section ──
           if (sticky) updateBackgroundColor(scrollProgress, sticky);
 
+          // ── Hero Title Animation (Depth + Detach Effect) ──
+          if (heroTitleRef.current) {
+            // We define progression `t` over the early scroll (0 to SECTION2_START)
+            const t = Math.min(1, Math.max(0, scrollProgress / PHASES.SECTION2_START));
+
+            // Phase 1 (t=0 to 0.15): Static
+            // Phase 2 (t=0.15 to 0.5): Approach (z-axis translation + slight scale)
+            // Phase 3 (t=0.45 to 1.0): Detach + Rise (y-axis translation)
+
+            // -- Approach progress (Phase 2)
+            const pApproach = Math.min(1, Math.max(0, (t - 0.15) / 0.35));
+            // easeInOut for approach
+            const easeApproach = pApproach * pApproach * (3 - 2 * pApproach);
+
+            // translateZ from 0 to 400px to give depth feel
+            const translateZ = easeApproach * 400;
+            // Very slight scale to reinforce depth without dramatic zoom (1 to 1.08)
+            const scale = 1 + easeApproach * 0.08;
+
+            // -- Rise progress (Phase 3)
+            const pRise = Math.min(1, Math.max(0, (t - 0.45) / 0.55));
+            // easeIn for rise so it detaches smoothly then accelerates upward
+            const easeRise = Math.pow(pRise, 2);
+
+            // translateY from 0 to -150vh
+            const translateY = easeRise * 150;
+
+            // Apply 3D transforms
+            heroTitleRef.current.style.transform = `translate3d(0, -${translateY}vh, ${translateZ}px) scale(${scale})`;
+
+            // Fade out starts very late (t=0.8 to 1.0)
+            const pFade = Math.min(1, Math.max(0, (t - 0.8) / 0.2));
+            heroTitleRef.current.style.opacity = `${Math.max(0, 1 - pFade)}`;
+          }
+
           // ── Section 2 text animation (slide from left) ──
           if (section2El) {
             animateSection2(scrollProgress, section2El, accent2El);
@@ -218,6 +254,10 @@ export default function MoonHero() {
   return (
     <div ref={outerRef} className={styles.outer}>
       <div className={styles.sticky} ref={stickyRef}>
+        <div ref={heroTitleRef} className={styles.heroTitleLayer}>
+          <div className={styles.heroTitleLine}>SOFT</div>
+          <div className={styles.heroTitleLine}>ORBIT</div>
+        </div>
         <div id="moon-wrapper" className={styles.moonWrapper}>
           <canvas ref={canvasRef} className={styles.canvas} />
         </div>
@@ -232,12 +272,22 @@ export default function MoonHero() {
           <div ref={accent2Ref} className={styles.section2Accent} />
         </div>
 
-        {/* Section 3: Text on RIGHT */}
-        <div ref={section3Ref} className={styles.section3Text}>
-          {SECTION3_LINES.map((line, i) => (
-            <div key={i} className={styles.sectionLine}>{line}</div>
-          ))}
-          <div ref={accent3Ref} className={styles.section3Accent} />
+        {/* Section 3: Complex layout */}
+        <div ref={section3Ref} className={styles.section3Content}>
+          <div className={styles.section3Header}>
+            <h2 className={styles.section3HeadingTop}>it's not just editing,</h2>
+            <h2 className={styles.section3HeadingBottom}>it's vibing with visuals.</h2>
+          </div>
+          <div className={styles.section3Body}>
+            <div className={styles.section3GridCol}>
+              <div className={styles.gridText}>
+                How to set the tempo as clips fall into rhythm like choreography? How to write a caption that excites? How to capture moments that look aesthetic but feel like a story? How to find the perfect track that makes your edit hit harder?
+              </div>
+              <div className={styles.gridImage} style={{ backgroundImage: 'url(/section3.jpeg)' }}></div>
+              <div className={styles.gridImage} style={{ backgroundImage: 'url(/section3.jpeg)' }}></div>
+              <div className={styles.gridImage} style={{ backgroundImage: 'url(/section31.jpeg)' }}></div>
+            </div>
+          </div>
         </div>
 
         {/* Section 4: Floating Cards */}
@@ -387,7 +437,7 @@ function animateSection2(
 function animateSection3(
   scrollProgress: number,
   el: HTMLElement,
-  accentEl: HTMLElement | null
+  accentEl: HTMLElement | null // keeping signature same, but we won't use accentEl anymore
 ): void {
   const t = phaseProgress(
     scrollProgress,
@@ -398,32 +448,34 @@ function animateSection3(
 
   el.style.opacity = `${eased}`;
 
-  const lines = el.querySelectorAll<HTMLElement>(`.${styles.sectionLine}`);
-  lines.forEach((line, i) => {
-    const staggerDelay = i * 0.015;
-    const lineT = phaseProgress(
+  // Select the new layout elements
+  const headingTop = el.querySelector<HTMLElement>(`.${styles.section3HeadingTop}`);
+  const headingBottom = el.querySelector<HTMLElement>(`.${styles.section3HeadingBottom}`);
+  const gridCol = el.querySelector<HTMLElement>(`.${styles.section3GridCol}`);
+
+  let staggerIndex = 0;
+
+  // Helper to animate an element with a stagger
+  const animateChild = (child: HTMLElement | null) => {
+    if (!child) return;
+    const staggerDelay = staggerIndex * 0.015;
+    const childT = phaseProgress(
       scrollProgress,
       PHASES.SECTION3_TEXT_START + staggerDelay,
       PHASES.SECTION3_TEXT_END + staggerDelay
     );
-    const lineEased = easeInOut(lineT);
+    const childEased = easeInOut(childT);
 
-    const translateY = 120 * (1 - lineEased);
-    const lineOpacity = lineEased;
-    line.style.transform = `translateY(${translateY}px)`;
-    line.style.opacity = `${lineOpacity}`;
-  });
+    const translateY = 120 * (1 - childEased);
+    child.style.transform = `translateY(${translateY}px)`;
+    child.style.opacity = `${childEased}`;
 
-  if (accentEl) {
-    const accentT = phaseProgress(
-      scrollProgress,
-      PHASES.SECTION3_TEXT_START + 0.02,
-      PHASES.SECTION3_TEXT_END
-    );
-    const accentEased = easeInOut(accentT);
-    accentEl.style.opacity = `${accentEased}`;
-    accentEl.style.transform = `scaleX(${accentEased})`;
-  }
+    staggerIndex++;
+  };
+
+  animateChild(headingTop);
+  animateChild(headingBottom);
+  animateChild(gridCol);
 
   // Fade out when Section 4 starts
   if (scrollProgress > PHASES.SECTION4_START) {
