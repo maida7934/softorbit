@@ -1,9 +1,9 @@
-import MoonHeroClient from '@/components/MoonHeroClient';
+import ExperienceClient from '@/components/ExperienceClient';
 
 export default function HomePage() {
   return (
     <main>
-      <MoonHeroClient />
+      <ExperienceClient />
     </main>
   );
 }

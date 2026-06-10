@@ -45,45 +45,46 @@ const SECTION3_LINES = ['ETERNAL', 'DRIFT', 'through space'];
 
 // ── Cards Data ────────────────────────────────────────────────
 const CARDS_DATA = [
-  { title: 'Phase I',   desc: 'The genesis of movement, where raw energy forms into structured arcs.',        bg: '/note1.jpg' },
-  { title: 'Phase II',  desc: 'Equilibrium reached. The system balances centrifugal and centripetal forces.', bg: '/note2.jpg' },
-  { title: 'Phase III', desc: 'Expansion. The orbit widens, capturing distant celestial bodies.',             bg: '/note3.jpg' },
-  { title: 'Phase IV',  desc: 'Harmonic resonance. All elements vibrate at the same frequency.',              bg: '/note1.jpg' },
-  { title: 'Phase V',   desc: 'Decay and rebirth. Old orbits shatter to form new rings.',                    bg: '/note2.jpg' },
-  { title: 'Phase VI',  desc: 'Eternal drift. The final state of infinite, frictionless motion.',             bg: '/note3.jpg' },
+  { title: 'Phase I', desc: 'The genesis of movement, where raw energy forms into structured arcs.', bg: '/note1.jpg' },
+  { title: 'Phase II', desc: 'Equilibrium reached. The system balances centrifugal and centripetal forces.', bg: '/note2.jpg' },
+  { title: 'Phase III', desc: 'Expansion. The orbit widens, capturing distant celestial bodies.', bg: '/note3.jpg' },
+  { title: 'Phase IV', desc: 'Harmonic resonance. All elements vibrate at the same frequency.', bg: '/note1.jpg' },
+  { title: 'Phase V', desc: 'Decay and rebirth. Old orbits shatter to form new rings.', bg: '/note2.jpg' },
+  { title: 'Phase VI', desc: 'Eternal drift. The final state of infinite, frictionless motion.', bg: '/note3.jpg' },
+  { title: 'Phase VII', desc: 'Quantum entanglement. The particles begin to reflect each other instantly.', bg: '/note1.jpg' },
 ];
 // ─────────────────────────────────────────────────────────────
 
 export default function MoonHero() {
-  const outerRef     = useRef<HTMLDivElement>(null);
-  const stickyRef    = useRef<HTMLDivElement>(null);
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const orbitRef     = useRef<HTMLDivElement>(null);
-  const paraRef      = useRef<HTMLDivElement>(null);
-  const section2Ref  = useRef<HTMLDivElement>(null);
-  const accent2Ref   = useRef<HTMLDivElement>(null);
-  const section3Ref  = useRef<HTMLDivElement>(null);
-  const accent3Ref   = useRef<HTMLDivElement>(null);
-  const cardsRef     = useRef<HTMLDivElement>(null);
+  const outerRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const orbitRef = useRef<HTMLDivElement>(null);
+  const paraRef = useRef<HTMLDivElement>(null);
+  const section2Ref = useRef<HTMLDivElement>(null);
+  const accent2Ref = useRef<HTMLDivElement>(null);
+  const section3Ref = useRef<HTMLDivElement>(null);
+  const accent3Ref = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const outer       = outerRef.current;
-    const sticky      = stickyRef.current;
-    const canvas      = canvasRef.current;
-    const orbitLayer  = orbitRef.current;
-    const paraLayer   = paraRef.current;
-    const section2El  = section2Ref.current;
-    const accent2El   = accent2Ref.current;
-    const section3El  = section3Ref.current;
-    const accent3El   = accent3Ref.current;
-    const cardsEl     = cardsRef.current;
+    const outer = outerRef.current;
+    const sticky = stickyRef.current;
+    const canvas = canvasRef.current;
+    const orbitLayer = orbitRef.current;
+    const paraLayer = paraRef.current;
+    const section2El = section2Ref.current;
+    const accent2El = accent2Ref.current;
+    const section3El = section3Ref.current;
+    const accent3El = accent3Ref.current;
+    const cardsEl = cardsRef.current;
 
     if (!outer || !sticky || !canvas || !orbitLayer || !paraLayer) return;
 
     // ── Responsive config ─────────────────────────────────
-    const isMobile       = window.innerWidth < 768;
-    const ORBIT_WORDS    = isMobile ? MOBILE_ORBIT_WORDS : ALL_ORBIT_WORDS;
-    const PARA_LINES     = isMobile ? MOBILE_PARA_LINES : ALL_PARA_LINES;
+    const isMobile = window.innerWidth < 768;
+    const ORBIT_WORDS = isMobile ? MOBILE_ORBIT_WORDS : ALL_ORBIT_WORDS;
+    const PARA_LINES = isMobile ? MOBILE_PARA_LINES : ALL_PARA_LINES;
     const PARA_FONT_SIZES = isMobile ? MOBILE_PARA_FONT_SIZES : ALL_PARA_FONT_SIZES;
 
     // ── Scene ──────────────────────────────────────────────
@@ -95,17 +96,18 @@ export default function MoonHero() {
     let rafId: number;
     let lastTime = performance.now();
     let moonController: MoonController | null = null;
-    let orbitSystem:    OrbitSystem    | null = null;
+    let orbitSystem: OrbitSystem | null = null;
 
     // ── Fluid trail (separate 2D canvas) ───────────────
-    const fluidTrail = new FluidTrail(sticky);
+    const moonWrapper = document.getElementById('moon-wrapper');
+    const fluidTrail = new FluidTrail(moonWrapper || sticky);
 
-    // ── Scroll driver — 4000% for 4 sections + cards ──
+    // ── Scroll driver — 4000vh ──
     const trigger = ScrollTrigger.create({
       trigger: outer,
       start: 'top top',
-      end: '+=4000%',
-      pin: true,
+      end: 'bottom top',
+      pin: false,
       scrub: true,
       onUpdate: (self) => {
         scrollProgress = self.progress;
@@ -166,6 +168,9 @@ export default function MoonHero() {
           fluidTrail.setMoonZone({ x: moonState.x, y: moonState.y, radius: moonState.radius });
           fluidTrail.update(dt);
 
+          // ── Update background color based on section ──
+          if (sticky) updateBackgroundColor(scrollProgress, sticky);
+
           // ── Section 2 text animation (slide from left) ──
           if (section2El) {
             animateSection2(scrollProgress, section2El, accent2El);
@@ -212,10 +217,12 @@ export default function MoonHero() {
 
   return (
     <div ref={outerRef} className={styles.outer}>
-      <div ref={stickyRef} className={styles.sticky}>
-        <canvas ref={canvasRef} className={styles.canvas} />
-        <div ref={orbitRef}  className={styles.orbitLayer} />
-        <div ref={paraRef}   className={styles.paraLayer}  />
+      <div className={styles.sticky} ref={stickyRef}>
+        <div id="moon-wrapper" className={styles.moonWrapper}>
+          <canvas ref={canvasRef} className={styles.canvas} />
+        </div>
+        <div ref={orbitRef} className={styles.orbitLayer} />
+        <div ref={paraRef} className={styles.paraLayer} />
 
         {/* Section 2: Text on LEFT */}
         <div ref={section2Ref} className={styles.section2Text}>
@@ -237,21 +244,79 @@ export default function MoonHero() {
         <div ref={cardsRef} className={styles.cardsLayer}>
           {CARDS_DATA.map((card, i) => {
             const isLeft = i % 2 === 0;
+            const tilt = isLeft ? -6 : 6;
             return (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`${styles.cardContainer} ${isLeft ? styles.left : styles.right}`}
               >
                 <div
                   className={styles.card}
-                  style={{ backgroundImage: `url(${card.bg})` }}
-                >
-                  <div className={styles.cardOverlay} />
-                  <div className={styles.cardContent}>
-                    <div className={styles.cardTitle}>{card.title}</div>
-                    <div className={styles.cardDesc}>{card.desc}</div>
-                  </div>
-                </div>
+                  data-tilt={tilt}
+                  onPointerDown={(e) => {
+                    const el = e.currentTarget;
+                    el.setPointerCapture(e.pointerId);
+                    el.dataset.dragging = 'true';
+                    el.dataset.startX = e.clientX.toString();
+                    el.dataset.startY = e.clientY.toString();
+                    el.dataset.baseX = el.dataset.curX || '0';
+                    el.dataset.baseY = el.dataset.curY || '0';
+                    el.style.transition = 'none';
+                  }}
+                  onPointerMove={(e) => {
+                    const el = e.currentTarget;
+                    const baseTilt = Number(el.dataset.tilt || 0);
+
+                    if (el.dataset.dragging === 'true') {
+                      const dx = e.clientX - Number(el.dataset.startX);
+                      const dy = e.clientY - Number(el.dataset.startY);
+                      const newX = Number(el.dataset.baseX) + dx;
+                      const newY = Number(el.dataset.baseY) + dy;
+                      el.dataset.curX = newX.toString();
+                      el.dataset.curY = newY.toString();
+                      el.style.transform = `translate(${newX}px, ${newY}px) rotate(${baseTilt}deg)`;
+                    } else {
+                      const rect = el.getBoundingClientRect();
+                      const x = e.clientX - rect.left;
+                      const y = e.clientY - rect.top;
+                      const centerX = rect.width / 2;
+                      const centerY = rect.height / 2;
+                      const rotateX = ((y - centerY) / centerY) * -15;
+                      const rotateY = ((x - centerX) / centerX) * 15;
+
+                      const curX = Number(el.dataset.curX || 0);
+                      const curY = Number(el.dataset.curY || 0);
+
+                      el.style.transform = `translate(${curX}px, ${curY}px) perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${baseTilt}deg) scale3d(1.05, 1.05, 1.05)`;
+                      el.style.transition = 'transform 0.1s ease-out';
+                    }
+                  }}
+                  onPointerUp={(e) => {
+                    const el = e.currentTarget;
+                    el.releasePointerCapture(e.pointerId);
+                    el.dataset.dragging = 'false';
+                    el.style.transition = 'transform 0.5s ease-out';
+
+                    const baseTilt = Number(el.dataset.tilt || 0);
+                    const curX = Number(el.dataset.curX || 0);
+                    const curY = Number(el.dataset.curY || 0);
+                    el.style.transform = `translate(${curX}px, ${curY}px) rotate(${baseTilt}deg)`;
+                  }}
+                  onPointerLeave={(e) => {
+                    const el = e.currentTarget;
+                    if (el.dataset.dragging === 'true') return;
+
+                    const baseTilt = Number(el.dataset.tilt || 0);
+                    const curX = Number(el.dataset.curX || 0);
+                    const curY = Number(el.dataset.curY || 0);
+                    el.style.transform = `translate(${curX}px, ${curY}px) rotate(${baseTilt}deg)`;
+                    el.style.transition = 'transform 0.5s ease-out';
+                  }}
+                  style={{
+                    backgroundImage: `url(${card.bg})`,
+                    transform: `rotate(${tilt}deg)`
+                  }}
+                />
               </div>
             );
           })}
@@ -280,7 +345,7 @@ function animateSection2(
 
   const lines = el.querySelectorAll<HTMLElement>(`.${styles.sectionLine}`);
   lines.forEach((line, i) => {
-    const staggerDelay = i * 0.08;
+    const staggerDelay = i * 0.015;
     const lineT = phaseProgress(
       scrollProgress,
       PHASES.SECTION2_TEXT_START + staggerDelay,
@@ -288,16 +353,16 @@ function animateSection2(
     );
     const lineEased = easeInOut(lineT);
 
-    const translateX = (-window.innerWidth) * (1 - lineEased);
+    const translateY = 120 * (1 - lineEased);
     const lineOpacity = lineEased;
-    line.style.transform = `translateX(${translateX}px)`;
+    line.style.transform = `translateY(${translateY}px)`;
     line.style.opacity = `${lineOpacity}`;
   });
 
   if (accentEl) {
     const accentT = phaseProgress(
       scrollProgress,
-      PHASES.SECTION2_TEXT_START + 0.06,
+      PHASES.SECTION2_TEXT_START + 0.02,
       PHASES.SECTION2_TEXT_END
     );
     const accentEased = easeInOut(accentT);
@@ -335,7 +400,7 @@ function animateSection3(
 
   const lines = el.querySelectorAll<HTMLElement>(`.${styles.sectionLine}`);
   lines.forEach((line, i) => {
-    const staggerDelay = i * 0.06;
+    const staggerDelay = i * 0.015;
     const lineT = phaseProgress(
       scrollProgress,
       PHASES.SECTION3_TEXT_START + staggerDelay,
@@ -352,7 +417,7 @@ function animateSection3(
   if (accentEl) {
     const accentT = phaseProgress(
       scrollProgress,
-      PHASES.SECTION3_TEXT_START + 0.06,
+      PHASES.SECTION3_TEXT_START + 0.02,
       PHASES.SECTION3_TEXT_END
     );
     const accentEased = easeInOut(accentT);
@@ -387,22 +452,17 @@ function animateSection4Cards(
   const end = PHASES.SECTION4_CARDS_END;
   const duration = end - start;
 
-  // Each card takes 50% of total duration to traverse the full screen.
-  // This allows adjacent cards (left + right) to overlap and be visible simultaneously.
+  // Cards take 50% of total duration to traverse the full screen.
+  // This guarantees a very large vertical gap between cards on the same side.
   const cardDuration = duration * 0.50;
 
-  // Cards are staggered in PAIRS: left+right cards of the same pair start together,
-  // but the left card is slightly ahead. Each pair starts after ~30% of duration.
-  const pairCount = Math.ceil(totalCards / 2); // 3 pairs
-  const pairStagger = (duration - cardDuration) / Math.max(pairCount - 1, 1);
+  // Staggering them evenly guarantees they do not overlap vertically.
+  const stagger = (duration - cardDuration) / Math.max(totalCards - 1, 1);
 
   containers.forEach((container, i) => {
-    // Pair index: cards 0&1 are pair 0, cards 2&3 are pair 1, etc.
-    const pairIndex = Math.floor(i / 2);
-    // Within the pair, odd cards (right side) start slightly later
-    const withinPairDelay = (i % 2 === 1) ? pairStagger * 0.15 : 0;
-
-    const cardStart = start + (pairIndex * pairStagger) + withinPairDelay;
+    // Alternating left/right is handled by CSS classes.
+    // We just stagger them sequentially.
+    const cardStart = start + (i * stagger);
     const cardEnd = cardStart + cardDuration;
 
     const t = phaseProgress(scrollProgress, cardStart, cardEnd);
@@ -410,25 +470,83 @@ function animateSection4Cards(
     if (t <= 0) {
       // Below the screen, waiting
       container.style.opacity = '0';
-      container.style.transform = `translateY(120vh)`;
+      container.style.transform = `translateY(80vh)`;
     } else if (t >= 1) {
       // Fully above the screen, exited
       container.style.opacity = '0';
-      container.style.transform = `translateY(-120vh)`;
+      container.style.transform = `translateY(-80vh)`;
     } else {
       // Smooth ease for position
       const eased = easeInOut(t);
 
-      // Fade in over first 15%, stay fully visible, fade out over last 10%
+      // Fade in over first 10%, but do NOT fade out at the end so it goes through the top naturally
       let opacity = 1;
-      if (t < 0.15) opacity = t / 0.15;
-      if (t > 0.90) opacity = (1 - t) / 0.10;
+      if (t < 0.10) opacity = t / 0.10;
 
-      // Full traverse: 120vh (below) → -120vh (above)
-      const yPos = 120 - (eased * 240);
+      // Full traverse: 80vh (below) → -80vh (above)
+      const yPos = 80 - (eased * 160);
 
       container.style.opacity = `${opacity}`;
       container.style.transform = `translateY(${yPos}vh)`;
     }
   });
+}
+
+// ────────────────────────────────────────────────────────────────
+// Background Color Interpolation
+// ────────────────────────────────────────────────────────────────
+function interpolateColor(color1: number[], color2: number[], factor: number): string {
+  const r = Math.round(color1[0] + factor * (color2[0] - color1[0]));
+  const g = Math.round(color1[1] + factor * (color2[1] - color1[1]));
+  const b = Math.round(color1[2] + factor * (color2[2] - color1[2]));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function hexToRgb(hex: string): number[] {
+  // Support 6-digit or 8-digit hex (ignoring alpha channel)
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i.exec(hex);
+  return result ? [
+    parseInt(result[1], 16),
+    parseInt(result[2], 16),
+    parseInt(result[3], 16)
+  ] : [0, 0, 0];
+}
+
+// Whimsical colors matching the moon's magical vibe
+const BG_COLORS = [
+  { p: 0.0, color: '#886868ff' },                       // Hero: Deep night
+  { p: PHASES.SECTION2_END, color: '#69606cff' },       // Section 2: Soft purple
+  { p: PHASES.SECTION3_END, color: '#bf9f92ff' },       // Section 3: Deep blue
+  { p: PHASES.SECTION4_END, color: '#989fb5ff' },       // Section 4: Muted rose
+];
+
+function updateBackgroundColor(progress: number, el: HTMLElement): void {
+  let activeColor = hexToRgb(BG_COLORS[0].color);
+
+  for (let i = 0; i < BG_COLORS.length - 1; i++) {
+    const currentPhaseEnd = BG_COLORS[i + 1].p;
+
+    // The color transitions FAST just after the moon lands (over 0.04 progress)
+    const transitionStart = currentPhaseEnd;
+    const transitionEnd = currentPhaseEnd + 0.04;
+
+    if (progress > transitionStart) {
+      if (progress < transitionEnd) {
+        // We are inside the rapid crossfade window
+        const factor = (progress - transitionStart) / (transitionEnd - transitionStart);
+        const colorA = hexToRgb(BG_COLORS[i].color);
+        const colorB = hexToRgb(BG_COLORS[i + 1].color);
+        activeColor = [
+          Math.round(colorA[0] + factor * (colorB[0] - colorA[0])),
+          Math.round(colorA[1] + factor * (colorB[1] - colorA[1])),
+          Math.round(colorA[2] + factor * (colorB[2] - colorA[2])),
+        ] as number[];
+      } else {
+        // We have fully transitioned to the new color
+        activeColor = hexToRgb(BG_COLORS[i + 1].color);
+      }
+    }
+  }
+
+  el.style.backgroundColor = `rgb(${activeColor[0]}, ${activeColor[1]}, ${activeColor[2]})`;
 }
