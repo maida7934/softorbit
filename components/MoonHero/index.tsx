@@ -5,6 +5,7 @@ import { createScene, handleResize } from '@/lib/moonHero/sceneSetup';
 import { loadMoon } from '@/lib/moonHero/moonLoader';
 import { MoonController } from '@/lib/moonHero/moonController';
 import { OrbitSystem } from '@/lib/moonHero/orbitSystem';
+import { ParticleSystem } from '@/lib/moonHero/particleSystem';
 import { FluidTrail } from '@/lib/moonHero/fluidTrail';
 import { getMoonScreenState } from '@/lib/moonHero/projectionUtils';
 import { computeDestinations } from '@/lib/moonHero/destinationCalc';
@@ -98,6 +99,14 @@ export default function MoonHero() {
     let lastTime = performance.now();
     let moonController: MoonController | null = null;
     let orbitSystem: OrbitSystem | null = null;
+    let particleSystem: ParticleSystem | null = null;
+
+    const mouse = { x: 0, y: 0 };
+    const onMouseMove = (e: MouseEvent) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener('mousemove', onMouseMove);
 
     // ── Fluid trail (separate 2D canvas) ───────────────
     const moonWrapper = document.getElementById('moon-wrapper');
@@ -153,6 +162,9 @@ export default function MoonHero() {
         );
         orbitSystem.setDestinations(dests);
 
+        // Particle system
+        particleSystem = new ParticleSystem(scene);
+
         // ── rAF loop ───────────────────────────────────────
         function tick(now: number): void {
           rafId = requestAnimationFrame(tick);
@@ -165,6 +177,8 @@ export default function MoonHero() {
           const moonState = getMoonScreenState(moon, camera, renderer);
 
           orbitSystem!.update(scrollProgress, moonState);
+
+          particleSystem?.update(scrollProgress, dt, mouse);
 
           fluidTrail.setMoonZone({ x: moonState.x, y: moonState.y, radius: moonState.radius });
           fluidTrail.update(dt);
@@ -246,8 +260,10 @@ export default function MoonHero() {
       trigger.kill();
       window.removeEventListener('resize', onResize);
       orbitSystem?.destroy();
+      particleSystem?.destroy();
       fluidTrail.destroy();
       renderer.dispose();
+      window.removeEventListener('mousemove', onMouseMove);
     };
   }, []);
 
@@ -255,8 +271,8 @@ export default function MoonHero() {
     <div ref={outerRef} className={styles.outer}>
       <div className={styles.sticky} ref={stickyRef}>
         <div ref={heroTitleRef} className={styles.heroTitleLayer}>
-          <div className={styles.heroTitleLine}>SOFT</div>
-          <div className={styles.heroTitleLine}>ORBIT</div>
+          <div className={styles.heroTitleTopLeft}>Forging<br/>companies that</div>
+          <div className={styles.heroTitleBottomRight}>shape<br/>the future</div>
         </div>
         <div id="moon-wrapper" className={styles.moonWrapper}>
           <canvas ref={canvasRef} className={styles.canvas} />
@@ -566,10 +582,10 @@ function hexToRgb(hex: string): number[] {
 
 // Whimsical colors matching the moon's magical vibe
 const BG_COLORS = [
-  { p: 0.0, color: '#886868ff' },                       // Hero: Deep night
-  { p: PHASES.SECTION2_END, color: '#69606cff' },       // Section 2: Soft purple
-  { p: PHASES.SECTION3_END, color: '#bf9f92ff' },       // Section 3: Deep blue
-  { p: PHASES.SECTION4_END, color: '#989fb5ff' },       // Section 4: Muted rose
+  { p: 0.0, color: '#121212' },                         // Hero: Blackish grey
+  { p: PHASES.SECTION2_END, color: '#69606c' },         // Section 2: Soft purple
+  { p: PHASES.SECTION3_END, color: '#bf9f92' },         // Section 3: Deep blue
+  { p: PHASES.SECTION4_END, color: '#989fb5' },         // Section 4: Muted rose
 ];
 
 function updateBackgroundColor(progress: number, el: HTMLElement): void {

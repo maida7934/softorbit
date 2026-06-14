@@ -39,4 +39,8 @@ export const PHASES = {
   // ── Section 4: 6 cards float past moon ──
   SECTION4_CARDS_START: 0.600,
   SECTION4_CARDS_END: 1.000,
+
+  // ── Particle burst (synced with Section 2 start) ──
+  PARTICLE_BURST_START: 0.187,   // same as SECTION2_START
+  PARTICLE_BURST_END:   0.247,   // burst completes over 0.06 scroll
 } as const;

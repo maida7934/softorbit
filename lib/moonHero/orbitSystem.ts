@@ -34,12 +34,11 @@ export class OrbitSystem {
     const el = document.createElement('span');
     el.textContent = text;
     
-    // First 3 words are bold Cormorant, rest are Pinyon Script
+    // First 3 words are Roc Grotesk, rest are Azeret Mono
     const isHighlight = index < 3;
-    const fontFamily = isHighlight ? 'var(--font-cormorant), serif' : 'var(--font-pinyon), cursive';
+    const fontFamily = isHighlight ? 'var(--font-roc), sans-serif' : 'var(--font-azeret-mono), monospace';
     const fontWeight = isHighlight ? '700' : '400';
-    // Pinyon script runs small, so we bump its relative scale
-    const scaleTransform = isHighlight ? 'translate(-50%, -50%)' : 'translate(-50%, -50%) scale(1.3)';
+    const scaleTransform = 'translate(-50%, -50%)';
     
     el.style.cssText = `
       position: absolute;
