@@ -60,13 +60,13 @@ export function computeDestinations(
 
     line.forEach((word) => {
       // Tighter character width tracking for narrower fonts
-      const ww = word.length * fs * 0.45 + fs * 0.2;
+      const ww = word.length * fs * 0.6;
       destinations.push({
         x: cursor + ww / 2, // center of word
         y: lineY,
         fontSize: fs,
       });
-      cursor += ww + fs * 0.2; // tighter spacing between words
+      cursor += ww + fs * 0.4; // horizontal space between words
       wordIdx++;
     });
   });

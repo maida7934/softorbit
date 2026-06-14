@@ -38,14 +38,23 @@ export class ParticleSystem {
     this.velX = new Float32Array(COUNT);
     this.velY = new Float32Array(COUNT);
 
-    const halfW = this.visW / 2;
-    const halfH = this.visH / 2;
-    const bandH = this.visH * 0.18;
+    const radiusX = this.visW * 0.45; // Width of the ellipsoid
+    const radiusY = this.visH * 0.15; // Height (flattened)
+    const radiusZ = 0.5;              // Depth
+    const offsetY = -this.visH * 0.4; // Positioned below the center
 
     for (let i = 0; i < COUNT; i++) {
-      const ox = (Math.random() - 0.5) * this.visW * 0.95;
-      const oy = -halfH + Math.random() * bandH;
-      const oz = (Math.random() - 0.5) * 0.5;
+      // Generate uniform points inside a sphere
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = Math.cbrt(Math.random()); 
+
+      // Scale to ellipsoid and apply offset
+      const ox = r * radiusX * Math.sin(phi) * Math.cos(theta);
+      const oy = offsetY + r * radiusY * Math.cos(phi);
+      const oz = r * radiusZ * Math.sin(phi) * Math.sin(theta);
 
       this.origins[i * 3] = ox;
       this.origins[i * 3 + 1] = oy;
@@ -55,7 +64,7 @@ export class ParticleSystem {
       do {
         tx = (Math.random() - 0.5) * this.visW * 0.9;
         ty = (Math.random() - 0.5) * this.visH * 0.9;
-      } while (Math.abs(tx) < halfW * 0.3 && ty > -halfH * 0.2 && ty < halfH * 0.4);
+      } while (Math.abs(tx) < this.visW * 0.15 && ty > -this.visH * 0.1 && ty < this.visH * 0.2);
 
       this.targets[i * 3] = tx;
       this.targets[i * 3 + 1] = ty;
@@ -73,7 +82,7 @@ export class ParticleSystem {
 
     const mat = new THREE.PointsMaterial({
       color: 0xd4cce8,
-      size: 0.05,
+      size: 0.025,
       sizeAttenuation: true,
       transparent: true,
       opacity: 0.85,        // visible and punchy from the start

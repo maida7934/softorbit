@@ -8,8 +8,8 @@ export interface OrbitWord {
   index: number;
 }
 
-const FONT_MIN = 15;
-const FONT_MAX = 24;
+const FONT_MIN = 12;
+const FONT_MAX = 18;
 
 export class OrbitSystem {
   private words: OrbitWord[];
@@ -34,9 +34,9 @@ export class OrbitSystem {
     const el = document.createElement('span');
     el.textContent = text;
     
-    // First 3 words are Roc Grotesk, rest are Azeret Mono
+    // All words use Spline Sans Mono now, but we'll keep the first 3 bolder
     const isHighlight = index < 3;
-    const fontFamily = isHighlight ? 'var(--font-roc), sans-serif' : 'var(--font-azeret-mono), monospace';
+    const fontFamily = 'var(--font-spline-mono), monospace';
     const fontWeight = isHighlight ? '700' : '400';
     const scaleTransform = 'translate(-50%, -50%)';
     
@@ -96,7 +96,17 @@ export class OrbitSystem {
       const wy = lerp(orbY, dst.y, peelT);
       const fs = lerp(orbitFontSize, dst.fontSize, peelT);
 
-      // Hide when passing behind the moon
+      // Fill effect
+      const wordFillStart = PHASES.FILL_START + (i / n) * PHASES.FILL_DURATION * 0.5;
+      const wordFillEnd = wordFillStart + PHASES.FILL_DURATION * 0.5;
+      const fillRaw = clamp(
+        (scrollProgress - wordFillStart) / (wordFillEnd - wordFillStart),
+        0,
+        1
+      );
+      const paragraphAlpha = lerp(0.2, 1.0, fillRaw);
+
+      // Hide when passing behind the moon initially
       let alpha = 1;
       if (peelRaw < 0.12 && zDepth < 0) {
         const dx = wx - mcx;
@@ -110,6 +120,13 @@ export class OrbitSystem {
       // Appear only after moon is visible (small R means nothing to see yet)
       const appear = clamp((R - 30) / 50, 0, 1);
       alpha *= appear;
+
+      // Transition to paragraph alpha
+      if (peelRaw > 0.99) {
+        alpha = paragraphAlpha;
+      } else {
+        alpha *= lerp(1.0, 0.2, peelT);
+      }
 
       span.style.left = `${wx}px`;
       span.style.top = `${wy}px`;

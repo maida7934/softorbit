@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Pinyon_Script, Azeret_Mono } from "next/font/google";
+import { Cormorant_Garamond, Pinyon_Script, Spline_Sans_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -15,8 +15,8 @@ const pinyon = Pinyon_Script({
   weight: ["400"],
 });
 
-const azeretMono = Azeret_Mono({
-  variable: "--font-azeret-mono",
+const splineMono = Spline_Sans_Mono({
+  variable: "--font-spline-mono",
   subsets: ["latin"],
 });
 
@@ -41,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${pinyon.variable} ${azeretMono.variable} ${rocGrotesk.variable}`}>
+    <html lang="en" className={`${cormorant.variable} ${pinyon.variable} ${splineMono.variable} ${rocGrotesk.variable}`}>
       <body>
         <LenisProvider>
           <Navbar />

@@ -38,7 +38,7 @@ const MOBILE_PARA_LINES: string[][] = [
   ['where', 'everything', 'stays', 'in'],
 ];
 
-const MOBILE_PARA_FONT_SIZES = [50, 40];
+const MOBILE_PARA_FONT_SIZES = [28, 24];
 
 // ── Section text content ──────────────────────────────────────
 const SECTION2_LINES = ['LUNAR', 'MOTION', 'in orbit'];
@@ -190,35 +190,22 @@ export default function MoonHero() {
           if (heroTitleRef.current) {
             // We define progression `t` over the early scroll (0 to SECTION2_START)
             const t = Math.min(1, Math.max(0, scrollProgress / PHASES.SECTION2_START));
+            
+            // Map animation exactly to t, so it vanishes right when the moon is fully grown
+            const easeOut = 1 - Math.pow(1 - t, 3); // Smooth ease out
 
-            // Phase 1 (t=0 to 0.15): Static
-            // Phase 2 (t=0.15 to 0.5): Approach (z-axis translation + slight scale)
-            // Phase 3 (t=0.45 to 1.0): Detach + Rise (y-axis translation)
+            // Scale down from 1 to 0.4
+            const scale = 1 - easeOut * 0.6;
+            
+            // Move outwards and backwards
+            const translateZ = -easeOut * 800;
+            const translateY = -easeOut * 100;
+            
+            heroTitleRef.current.style.transform = `translate3d(0, ${translateY}vh, ${translateZ}px) scale(${scale})`;
 
-            // -- Approach progress (Phase 2)
-            const pApproach = Math.min(1, Math.max(0, (t - 0.15) / 0.35));
-            // easeInOut for approach
-            const easeApproach = pApproach * pApproach * (3 - 2 * pApproach);
-
-            // translateZ from 0 to 400px to give depth feel
-            const translateZ = easeApproach * 400;
-            // Very slight scale to reinforce depth without dramatic zoom (1 to 1.08)
-            const scale = 1 + easeApproach * 0.08;
-
-            // -- Rise progress (Phase 3)
-            const pRise = Math.min(1, Math.max(0, (t - 0.45) / 0.55));
-            // easeIn for rise so it detaches smoothly then accelerates upward
-            const easeRise = Math.pow(pRise, 2);
-
-            // translateY from 0 to -150vh
-            const translateY = easeRise * 150;
-
-            // Apply 3D transforms
-            heroTitleRef.current.style.transform = `translate3d(0, -${translateY}vh, ${translateZ}px) scale(${scale})`;
-
-            // Fade out starts very late (t=0.8 to 1.0)
-            const pFade = Math.min(1, Math.max(0, (t - 0.8) / 0.2));
-            heroTitleRef.current.style.opacity = `${Math.max(0, 1 - pFade)}`;
+            // Fade out proportionally to easeOut
+            const opacity = Math.max(0, 1 - easeOut * 1.5);
+            heroTitleRef.current.style.opacity = `${opacity}`;
           }
 
           // ── Section 2 text animation (slide from left) ──

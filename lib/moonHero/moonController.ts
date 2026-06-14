@@ -3,7 +3,7 @@ import { quadBezier, easeInOut, clamp } from './math';
 import { PHASES } from './types';
 
 const ROT_SPEED   = 0.005;  // radians per second
-const TARGET_FILL = 0.42;   // moon fills 42% of screen height on load
+const TARGET_FILL = 0.38;   // moon fills 38% of screen height on load
 
 // ── Section 2 Bézier: centre → RIGHT ──
 const S2_START   = { x:  0,    y: -1.0, z: 0 };
@@ -74,14 +74,14 @@ export class MoonController {
     if (scrollProgress <= PHASES.SECTION2_START) {
       // ── Hero phase: scale up, stay centred ──
       const heroP = clamp(scrollProgress / PHASES.SECTION2_START, 0, 1);
-      const heroScale = this.targetScale + (this.targetScale * 0.5 * heroP);
+      const heroScale = this.targetScale + (this.targetScale * 0.2 * heroP); // Max 1.2x scale
       this.mesh.scale.setScalar(heroScale);
       this.mesh.position.set(S2_START.x, S2_START.y, S2_START.z);
       this.mesh.rotation.y = this.rotation;
 
     } else if (scrollProgress <= PHASES.SECTION3_START) {
       // ── Section 2: curve centre → right ──
-      const maxHeroScale = this.targetScale * 1.5;
+      const maxHeroScale = this.targetScale * 1.2;
       const s2Scale = maxHeroScale + (this.targetScale * 1.1 - maxHeroScale) * s2T;
       this.mesh.scale.setScalar(s2Scale);
 

@@ -15,9 +15,9 @@
   display: flex;
   flex-direction: column;
   color: #fff;
-  font-family: var(--font-pinyon), cursive;
+  font-family: var(--font-spline-mono), monospace;
   font-weight: 400;
-  font-size: 28px;
+  font-size: 20px;
   line-height: 1.1;
   pointer-events: auto;
   cursor: pointer;
@@ -32,9 +32,9 @@
 
 .navLink {
   color: #fff;
-  font-family: var(--font-cormorant), serif;
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 16px;
+  font-weight: 400;
   cursor: pointer;
   text-transform: lowercase;
   letter-spacing: 0.05em;
