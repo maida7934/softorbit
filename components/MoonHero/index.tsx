@@ -7,9 +7,10 @@ import { MoonController } from '@/lib/moonHero/moonController';
 import { OrbitSystem } from '@/lib/moonHero/orbitSystem';
 import { ParticleSystem } from '@/lib/moonHero/particleSystem';
 import { FluidTrail } from '@/lib/moonHero/fluidTrail';
+import { Wave2D } from '@/lib/moonHero/wave2D';
 import { getMoonScreenState } from '@/lib/moonHero/projectionUtils';
 import { computeDestinations } from '@/lib/moonHero/destinationCalc';
-import { phaseProgress, easeInOut } from '@/lib/moonHero/math';
+import { phaseProgress, easeInOut, clamp } from '@/lib/moonHero/math';
 import { PHASES } from '@/lib/moonHero/types';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -40,9 +41,27 @@ const MOBILE_PARA_LINES: string[][] = [
 
 const MOBILE_PARA_FONT_SIZES = [28, 24];
 
-// ── Section text content ──────────────────────────────────────
-const SECTION2_LINES = ['LUNAR', 'MOTION', 'in orbit'];
-const SECTION3_LINES = ['ETERNAL', 'DRIFT', 'through space'];
+// ── Section 2 text blocks (matching reference layout) ─────────
+const S2_BLOCK_TOP_LEFT = {
+  label: 'orbital design',
+  title: 'soft orbit',
+  subtitle: 'Crafted with motion',
+};
+
+const S2_BLOCK_TOP_RIGHT = {
+  heading: 'introduction to orbit',
+  body: "Soft Orbit is a creative studio forging brands through motion and precision. Blending cutting-edge design with strategic clarity, we create systems that captivate. Designed for founders who think in futures.",
+};
+
+const S2_BLOCK_BOTTOM_LEFT = {
+  heading: 'capabilities',
+  body: "Branding, Motion Design, Web Development, 3D Visualization, Creative Direction",
+};
+
+const S2_BLOCK_BOTTOM_RIGHT = {
+  body: "We pull your audience into orbit. Frictionless motion, infinite engagement.",
+  cta: 'explore orbit',
+};
 
 // ── Cards Data ────────────────────────────────────────────────
 const CARDS_DATA = [
@@ -64,10 +83,10 @@ export default function MoonHero() {
   const orbitRef = useRef<HTMLDivElement>(null);
   const paraRef = useRef<HTMLDivElement>(null);
   const section2Ref = useRef<HTMLDivElement>(null);
-  const accent2Ref = useRef<HTMLDivElement>(null);
-  const section3Ref = useRef<HTMLDivElement>(null);
-  const accent3Ref = useRef<HTMLDivElement>(null);
+  const boundaryRingRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
+  const waveCanvasRef = useRef<HTMLCanvasElement>(null);
+  const section3ScrollRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const outer = outerRef.current;
@@ -76,10 +95,10 @@ export default function MoonHero() {
     const orbitLayer = orbitRef.current;
     const paraLayer = paraRef.current;
     const section2El = section2Ref.current;
-    const accent2El = accent2Ref.current;
-    const section3El = section3Ref.current;
-    const accent3El = accent3Ref.current;
+    const boundaryRingEl = boundaryRingRef.current;
     const cardsEl = cardsRef.current;
+    const section3El = section3ScrollRef.current;
+    const waveCanvas = waveCanvasRef.current;
 
     if (!outer || !sticky || !canvas || !orbitLayer || !paraLayer) return;
 
@@ -100,6 +119,8 @@ export default function MoonHero() {
     let moonController: MoonController | null = null;
     let orbitSystem: OrbitSystem | null = null;
     let particleSystem: ParticleSystem | null = null;
+    let wave2D: Wave2D | null = null;
+    let section3Observer: IntersectionObserver | null = null;
 
     const mouse = { x: 0, y: 0 };
     const onMouseMove = (e: MouseEvent) => {
@@ -112,15 +133,33 @@ export default function MoonHero() {
     const moonWrapper = document.getElementById('moon-wrapper');
     const fluidTrail = new FluidTrail(moonWrapper || sticky);
 
-    // ── Scroll driver — 4000vh ──
+    // Section 3 reveal and standalone 2D wave canvas.
+    if (section3El) {
+      section3Observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            section3El.classList.add(styles.section3Visible);
+          }
+        },
+        { threshold: 0.2 }
+      );
+      section3Observer.observe(section3El);
+    }
+
+    if (waveCanvas) {
+      wave2D = new Wave2D(waveCanvas);
+    }
+
+    // ── Scroll driver ──
     const trigger = ScrollTrigger.create({
       trigger: outer,
       start: 'top top',
-      end: 'bottom top',
-      pin: false,
+      end: 'bottom bottom',
+      pin: sticky,
+      pinSpacing: false,
       scrub: true,
       onUpdate: (self) => {
-        scrollProgress = self.progress;
+        scrollProgress = self.progress * 0.55;
       }
     });
 
@@ -183,45 +222,34 @@ export default function MoonHero() {
           fluidTrail.setMoonZone({ x: moonState.x, y: moonState.y, radius: moonState.radius });
           fluidTrail.update(dt);
 
-          // ── Update background color based on section ──
-          if (sticky) updateBackgroundColor(scrollProgress, sticky);
+          // ── Background color remains black during parallax ──
+          // (No update needed as sticky is #121212 by default)
 
           // ── Hero Title Animation (Depth + Detach Effect) ──
           if (heroTitleRef.current) {
-            // We define progression `t` over the early scroll (0 to SECTION2_START)
             const t = Math.min(1, Math.max(0, scrollProgress / PHASES.SECTION2_START));
-            
-            // Map animation exactly to t, so it vanishes right when the moon is fully grown
-            const easeOut = 1 - Math.pow(1 - t, 3); // Smooth ease out
+            const easeOut = 1 - Math.pow(1 - t, 3);
 
-            // Scale down from 1 to 0.4
             const scale = 1 - easeOut * 0.6;
-            
-            // Move outwards and backwards
             const translateZ = -easeOut * 800;
             const translateY = -easeOut * 100;
-            
-            heroTitleRef.current.style.transform = `translate3d(0, ${translateY}vh, ${translateZ}px) scale(${scale})`;
 
-            // Fade out proportionally to easeOut
+            heroTitleRef.current.style.transform = `translate3d(0, ${translateY}vh, ${translateZ}px) scale(${scale})`;
             const opacity = Math.max(0, 1 - easeOut * 1.5);
             heroTitleRef.current.style.opacity = `${opacity}`;
           }
 
-          // ── Section 2 text animation (slide from left) ──
+          // ── Section 2 text animation (slide up) ──
           if (section2El) {
-            animateSection2(scrollProgress, section2El, accent2El);
+            animateSection2(scrollProgress, section2El);
           }
 
-          // ── Section 3 text animation (slide up on right) ──
-          if (section3El) {
-            animateSection3(scrollProgress, section3El, accent3El);
+          // ── Moon boundary ring ──
+          if (boundaryRingEl) {
+            animateBoundaryRing(scrollProgress, boundaryRingEl);
           }
 
-          // ── Section 4 cards animation ──
-          if (cardsEl) {
-            animateSection4Cards(scrollProgress, cardsEl);
-          }
+          // (Section 4 removed to let Section 3 scroll up immediately)
 
           // ── Fade out orbit words as Section 2 starts ──
           if (scrollProgress > PHASES.SECTION2_START) {
@@ -248,6 +276,8 @@ export default function MoonHero() {
       window.removeEventListener('resize', onResize);
       orbitSystem?.destroy();
       particleSystem?.destroy();
+      wave2D?.destroy();
+      section3Observer?.disconnect();
       fluidTrail.destroy();
       renderer.dispose();
       window.removeEventListener('mousemove', onMouseMove);
@@ -255,245 +285,202 @@ export default function MoonHero() {
   }, []);
 
   return (
-    <div ref={outerRef} className={styles.outer}>
-      <div className={styles.sticky} ref={stickyRef}>
-        <div ref={heroTitleRef} className={styles.heroTitleLayer}>
-          <div className={styles.heroTitleTopLeft}>Forging<br/>companies that</div>
-          <div className={styles.heroTitleBottomRight}>shape<br/>the future</div>
-        </div>
-        <div id="moon-wrapper" className={styles.moonWrapper}>
-          <canvas ref={canvasRef} className={styles.canvas} />
-        </div>
-        <div ref={orbitRef} className={styles.orbitLayer} />
-        <div ref={paraRef} className={styles.paraLayer} />
-
-        {/* Section 2: Text on LEFT */}
-        <div ref={section2Ref} className={styles.section2Text}>
-          {SECTION2_LINES.map((line, i) => (
-            <div key={i} className={styles.sectionLine}>{line}</div>
-          ))}
-          <div ref={accent2Ref} className={styles.section2Accent} />
-        </div>
-
-        {/* Section 3: Complex layout */}
-        <div ref={section3Ref} className={styles.section3Content}>
-          <div className={styles.section3Header}>
-            <h2 className={styles.section3HeadingTop}>it's not just editing,</h2>
-            <h2 className={styles.section3HeadingBottom}>it's vibing with visuals.</h2>
+    <>
+      <div ref={outerRef} className={styles.outer}>
+        <div className={styles.sticky} ref={stickyRef}>
+          <div ref={heroTitleRef} className={styles.heroTitleLayer}>
+            <div className={styles.heroTitleTopLeft}>Forging<br/>companies that</div>
+            <div className={styles.heroTitleBottomRight}>shape<br/>the future</div>
           </div>
-          <div className={styles.section3Body}>
-            <div className={styles.section3GridCol}>
-              <div className={styles.gridText}>
-                How to set the tempo as clips fall into rhythm like choreography? How to write a caption that excites? How to capture moments that look aesthetic but feel like a story? How to find the perfect track that makes your edit hit harder?
-              </div>
-              <div className={styles.gridImage} style={{ backgroundImage: 'url(/section3.jpeg)' }}></div>
-              <div className={styles.gridImage} style={{ backgroundImage: 'url(/section3.jpeg)' }}></div>
-              <div className={styles.gridImage} style={{ backgroundImage: 'url(/section31.jpeg)' }}></div>
+          <div id="moon-wrapper" className={styles.moonWrapper}>
+            <canvas ref={canvasRef} className={styles.canvas} />
+          </div>
+          <div ref={orbitRef} className={styles.orbitLayer} />
+          <div ref={paraRef} className={styles.paraLayer} />
+
+          {/* Moon boundary ring */}
+          <div ref={boundaryRingRef} className={styles.moonBoundaryRing} />
+
+          {/* Section 2: Four Text Blocks surrounding the moon */}
+          <div ref={section2Ref} className={styles.section2Text}>
+            {/* Top Left: Label + Title */}
+            <div className={`${styles.s2Block} ${styles.s2BlockTopLeft}`}>
+              <span className={styles.clipLine}>
+                <span className={styles.textLine}>{S2_BLOCK_TOP_LEFT.label}</span>
+              </span>
+              <span className={styles.clipLine}>
+                <span className={`${styles.textLine}`} style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'var(--font-roc), sans-serif', letterSpacing: '-0.02em' }}>
+                  {S2_BLOCK_TOP_LEFT.title}
+                </span>
+              </span>
+              <span className={styles.clipLine}>
+                <span className={styles.textLine}>{S2_BLOCK_TOP_LEFT.subtitle}</span>
+              </span>
+            </div>
+
+            {/* Top Right: Heading + Body */}
+            <div className={`${styles.s2Block} ${styles.s2BlockTopRight}`}>
+              <span className={styles.clipLine}>
+                <span className={styles.textLine} style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
+                  {S2_BLOCK_TOP_RIGHT.heading}
+                </span>
+              </span>
+              {S2_BLOCK_TOP_RIGHT.body.match(/.{1,52}(\s|$)/g)?.map((line, j) => (
+                <span key={j} className={styles.clipLine}>
+                  <span className={styles.textLine}>{line.trim()}</span>
+                </span>
+              ))}
+            </div>
+
+            {/* Bottom Left: Sub-label */}
+            <div className={`${styles.s2Block} ${styles.s2BlockBottomLeft}`}>
+              <span className={styles.clipLine}>
+                <span className={styles.textLine} style={{ fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
+                  {S2_BLOCK_BOTTOM_LEFT.heading}
+                </span>
+              </span>
+              {S2_BLOCK_BOTTOM_LEFT.body.split(', ').map((item, j) => (
+                <span key={j} className={styles.clipLine}>
+                  <span className={styles.textLine}>{item}</span>
+                </span>
+              ))}
+            </div>
+
+            {/* Bottom Right: Body + CTA */}
+            <div className={`${styles.s2Block} ${styles.s2BlockBottomRight}`}>
+              {S2_BLOCK_BOTTOM_RIGHT.body.match(/.{1,45}(\s|$)/g)?.map((line, j) => (
+                <span key={j} className={styles.clipLine}>
+                  <span className={styles.textLine}>{line.trim()}</span>
+                </span>
+              ))}
+              <span className={styles.clipLine}>
+                <span className={styles.textLine}>
+                  <button className={styles.s2Cta}>{S2_BLOCK_BOTTOM_RIGHT.cta}</button>
+                </span>
+              </span>
             </div>
           </div>
-        </div>
 
-        {/* Section 4: Floating Cards */}
-        <div ref={cardsRef} className={styles.cardsLayer}>
-          {CARDS_DATA.map((card, i) => {
-            const isLeft = i % 2 === 0;
-            const tilt = isLeft ? -6 : 6;
-            return (
-              <div
-                key={i}
-                className={`${styles.cardContainer} ${isLeft ? styles.left : styles.right}`}
-              >
-                <div
-                  className={styles.card}
-                  data-tilt={tilt}
-                  onPointerDown={(e) => {
-                    const el = e.currentTarget;
-                    el.setPointerCapture(e.pointerId);
-                    el.dataset.dragging = 'true';
-                    el.dataset.startX = e.clientX.toString();
-                    el.dataset.startY = e.clientY.toString();
-                    el.dataset.baseX = el.dataset.curX || '0';
-                    el.dataset.baseY = el.dataset.curY || '0';
-                    el.style.transition = 'none';
-                  }}
-                  onPointerMove={(e) => {
-                    const el = e.currentTarget;
-                    const baseTilt = Number(el.dataset.tilt || 0);
-
-                    if (el.dataset.dragging === 'true') {
-                      const dx = e.clientX - Number(el.dataset.startX);
-                      const dy = e.clientY - Number(el.dataset.startY);
-                      const newX = Number(el.dataset.baseX) + dx;
-                      const newY = Number(el.dataset.baseY) + dy;
-                      el.dataset.curX = newX.toString();
-                      el.dataset.curY = newY.toString();
-                      el.style.transform = `translate(${newX}px, ${newY}px) rotate(${baseTilt}deg)`;
-                    } else {
-                      const rect = el.getBoundingClientRect();
-                      const x = e.clientX - rect.left;
-                      const y = e.clientY - rect.top;
-                      const centerX = rect.width / 2;
-                      const centerY = rect.height / 2;
-                      const rotateX = ((y - centerY) / centerY) * -15;
-                      const rotateY = ((x - centerX) / centerX) * 15;
-
-                      const curX = Number(el.dataset.curX || 0);
-                      const curY = Number(el.dataset.curY || 0);
-
-                      el.style.transform = `translate(${curX}px, ${curY}px) perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${baseTilt}deg) scale3d(1.05, 1.05, 1.05)`;
-                      el.style.transition = 'transform 0.1s ease-out';
-                    }
-                  }}
-                  onPointerUp={(e) => {
-                    const el = e.currentTarget;
-                    el.releasePointerCapture(e.pointerId);
-                    el.dataset.dragging = 'false';
-                    el.style.transition = 'transform 0.5s ease-out';
-
-                    const baseTilt = Number(el.dataset.tilt || 0);
-                    const curX = Number(el.dataset.curX || 0);
-                    const curY = Number(el.dataset.curY || 0);
-                    el.style.transform = `translate(${curX}px, ${curY}px) rotate(${baseTilt}deg)`;
-                  }}
-                  onPointerLeave={(e) => {
-                    const el = e.currentTarget;
-                    if (el.dataset.dragging === 'true') return;
-
-                    const baseTilt = Number(el.dataset.tilt || 0);
-                    const curX = Number(el.dataset.curX || 0);
-                    const curY = Number(el.dataset.curY || 0);
-                    el.style.transform = `translate(${curX}px, ${curY}px) rotate(${baseTilt}deg)`;
-                    el.style.transition = 'transform 0.5s ease-out';
-                  }}
-                  style={{
-                    backgroundImage: `url(${card.bg})`,
-                    transform: `rotate(${tilt}deg)`
-                  }}
-                />
-              </div>
-            );
-          })}
+          {/* Section 4 removed */}
         </div>
       </div>
-    </div>
+
+      {/* ── Section 3: Normal-scroll white panel ── */}
+      <section className={styles.section3Scroll} ref={section3ScrollRef}>
+        <div className={styles.section3Left}>
+          <span className={styles.section3Label}>about soft orbit</span>
+          <h2 className={styles.section3Heading}>
+            where motion<br/>
+            meets meaning
+          </h2>
+          <p className={styles.section3Body}>
+            We don&apos;t just design — we choreograph. Every pixel is placed
+            with intention, every animation engineered for emotion. Our process
+            transforms static brands into living, breathing digital ecosystems
+            that captivate audiences and drive lasting engagement.
+          </p>
+          <button
+            className={styles.section3Btn}
+            onClick={(e) => {
+              const btn = e.currentTarget;
+              btn.style.transform = 'scale(0.96)';
+              setTimeout(() => {
+                btn.style.transform = 'scale(1)';
+              }, 150);
+            }}
+          >
+            discover our process
+            <span className={styles.btnArrow}>→</span>
+          </button>
+        </div>
+
+        <div className={styles.section3Divider} />
+
+        <div className={styles.section3Right}>
+          <canvas ref={waveCanvasRef} className={styles.waveCanvas} />
+        </div>
+      </section>
+    </>
   );
 }
 
 // ────────────────────────────────────────────────────────────────
-// Section 2 text: slides in from the LEFT and lands on the LEFT.
+// Section 2 text: 4 blocks sliding up from clip
 // ────────────────────────────────────────────────────────────────
+function animateTextSlideUp(
+  scrollProgress: number,
+  lines: NodeListOf<HTMLElement>,
+  phaseStart: number,
+  phaseEnd: number,
+  staggerPerLine = 0.02
+): void {
+  lines.forEach((line, i) => {
+    const start = phaseStart + i * staggerPerLine;
+    const end   = phaseEnd   + i * staggerPerLine;
+
+    const raw   = clamp((scrollProgress - start) / (end - start), 0, 1);
+    const eased = easeInOut(raw);
+
+    line.style.transform = `translateY(${(1 - eased) * 100}%)`;
+    line.style.opacity   = `${eased}`;
+  });
+}
+
 function animateSection2(
   scrollProgress: number,
   el: HTMLElement,
-  accentEl: HTMLElement | null
 ): void {
-  const t = phaseProgress(
+  const lines = el.querySelectorAll<HTMLElement>(`.${styles.textLine}`);
+  animateTextSlideUp(
+    scrollProgress,
+    lines,
+    PHASES.SECTION2_TEXT_START,
+    PHASES.SECTION2_TEXT_END,
+    0.02
+  );
+
+  // Smooth fade out toward section 3
+  if (scrollProgress > PHASES.SECTION3_START - 0.06) {
+    const fadeOut = 1 - phaseProgress(
+      scrollProgress,
+      PHASES.SECTION3_START - 0.06,
+      PHASES.SECTION3_START
+    );
+    el.style.opacity = `${Math.max(0, fadeOut)}`;
+  } else if (scrollProgress > PHASES.SECTION2_TEXT_START) {
+    el.style.opacity = '1';
+  } else {
+    el.style.opacity = '0';
+  }
+}
+
+// ────────────────────────────────────────────────────────────────
+// Boundary ring around the moon
+// ────────────────────────────────────────────────────────────────
+function animateBoundaryRing(
+  scrollProgress: number,
+  el: HTMLElement,
+): void {
+  // Ring fades in as Section 2 text appears, fades out before Section 3
+  const fadeIn = phaseProgress(
     scrollProgress,
     PHASES.SECTION2_TEXT_START,
     PHASES.SECTION2_TEXT_END
   );
-  const eased = easeInOut(t);
+  const fadeOut = scrollProgress > PHASES.SECTION3_START - 0.06
+    ? 1 - phaseProgress(scrollProgress, PHASES.SECTION3_START - 0.06, PHASES.SECTION3_START)
+    : 1;
 
-  el.style.opacity = `${eased}`;
+  const alpha = easeInOut(fadeIn) * Math.max(0, fadeOut);
+  el.style.opacity = `${alpha}`;
 
-  const lines = el.querySelectorAll<HTMLElement>(`.${styles.sectionLine}`);
-  lines.forEach((line, i) => {
-    const staggerDelay = i * 0.015;
-    const lineT = phaseProgress(
-      scrollProgress,
-      PHASES.SECTION2_TEXT_START + staggerDelay,
-      PHASES.SECTION2_TEXT_END + staggerDelay
-    );
-    const lineEased = easeInOut(lineT);
-
-    const translateY = 120 * (1 - lineEased);
-    const lineOpacity = lineEased;
-    line.style.transform = `translateY(${translateY}px)`;
-    line.style.opacity = `${lineOpacity}`;
-  });
-
-  if (accentEl) {
-    const accentT = phaseProgress(
-      scrollProgress,
-      PHASES.SECTION2_TEXT_START + 0.02,
-      PHASES.SECTION2_TEXT_END
-    );
-    const accentEased = easeInOut(accentT);
-    accentEl.style.opacity = `${accentEased}`;
-    accentEl.style.transform = `scaleX(${accentEased})`;
-  }
-
-  // Fade out when Section 3 starts
-  if (scrollProgress > PHASES.SECTION3_START) {
-    const fadeOut = 1 - phaseProgress(
-      scrollProgress,
-      PHASES.SECTION3_START,
-      PHASES.SECTION3_START + 0.05
-    );
-    el.style.opacity = `${Math.max(0, fadeOut)}`;
-  }
-}
-
-// ────────────────────────────────────────────────────────────────
-// Section 3 text: slides UP and lands on the RIGHT.
-// ────────────────────────────────────────────────────────────────
-function animateSection3(
-  scrollProgress: number,
-  el: HTMLElement,
-  accentEl: HTMLElement | null // keeping signature same, but we won't use accentEl anymore
-): void {
-  const t = phaseProgress(
-    scrollProgress,
-    PHASES.SECTION3_TEXT_START,
-    PHASES.SECTION3_TEXT_END
-  );
-  const eased = easeInOut(t);
-
-  el.style.opacity = `${eased}`;
-
-  // Select the new layout elements
-  const headingTop = el.querySelector<HTMLElement>(`.${styles.section3HeadingTop}`);
-  const headingBottom = el.querySelector<HTMLElement>(`.${styles.section3HeadingBottom}`);
-  const gridCol = el.querySelector<HTMLElement>(`.${styles.section3GridCol}`);
-
-  let staggerIndex = 0;
-
-  // Helper to animate an element with a stagger
-  const animateChild = (child: HTMLElement | null) => {
-    if (!child) return;
-    const staggerDelay = staggerIndex * 0.015;
-    const childT = phaseProgress(
-      scrollProgress,
-      PHASES.SECTION3_TEXT_START + staggerDelay,
-      PHASES.SECTION3_TEXT_END + staggerDelay
-    );
-    const childEased = easeInOut(childT);
-
-    const translateY = 120 * (1 - childEased);
-    child.style.transform = `translateY(${translateY}px)`;
-    child.style.opacity = `${childEased}`;
-
-    staggerIndex++;
-  };
-
-  animateChild(headingTop);
-  animateChild(headingBottom);
-  animateChild(gridCol);
-
-  // Fade out when Section 4 starts
-  if (scrollProgress > PHASES.SECTION4_START) {
-    const fadeOut = 1 - phaseProgress(
-      scrollProgress,
-      PHASES.SECTION4_START,
-      PHASES.SECTION4_START + 0.05
-    );
-    el.style.opacity = `${Math.max(0, fadeOut)}`;
-  }
+  // Subtle scale pulse
+  const scale = 1 + Math.sin(scrollProgress * Math.PI * 8) * 0.02;
+  el.style.transform = `translateX(-50%) scale(${scale})`;
 }
 
 // ────────────────────────────────────────────────────────────────
 // Section 4 Cards: Float up from bottom and out through the top.
-// Staggered intervals so they alternate left and right.
 // ────────────────────────────────────────────────────────────────
 function animateSection4Cards(
   scrollProgress: number,
@@ -507,38 +494,26 @@ function animateSection4Cards(
   const end = PHASES.SECTION4_CARDS_END;
   const duration = end - start;
 
-  // Cards take 50% of total duration to traverse the full screen.
-  // This guarantees a very large vertical gap between cards on the same side.
   const cardDuration = duration * 0.50;
-
-  // Staggering them evenly guarantees they do not overlap vertically.
   const stagger = (duration - cardDuration) / Math.max(totalCards - 1, 1);
 
   containers.forEach((container, i) => {
-    // Alternating left/right is handled by CSS classes.
-    // We just stagger them sequentially.
     const cardStart = start + (i * stagger);
     const cardEnd = cardStart + cardDuration;
 
     const t = phaseProgress(scrollProgress, cardStart, cardEnd);
 
     if (t <= 0) {
-      // Below the screen, waiting
       container.style.opacity = '0';
       container.style.transform = `translateY(80vh)`;
     } else if (t >= 1) {
-      // Fully above the screen, exited
       container.style.opacity = '0';
       container.style.transform = `translateY(-80vh)`;
     } else {
-      // Smooth ease for position
       const eased = easeInOut(t);
-
-      // Fade in over first 10%, but do NOT fade out at the end so it goes through the top naturally
       let opacity = 1;
       if (t < 0.10) opacity = t / 0.10;
 
-      // Full traverse: 80vh (below) → -80vh (above)
       const yPos = 80 - (eased * 160);
 
       container.style.opacity = `${opacity}`;
@@ -550,15 +525,7 @@ function animateSection4Cards(
 // ────────────────────────────────────────────────────────────────
 // Background Color Interpolation
 // ────────────────────────────────────────────────────────────────
-function interpolateColor(color1: number[], color2: number[], factor: number): string {
-  const r = Math.round(color1[0] + factor * (color2[0] - color1[0]));
-  const g = Math.round(color1[1] + factor * (color2[1] - color1[1]));
-  const b = Math.round(color1[2] + factor * (color2[2] - color1[2]));
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
 function hexToRgb(hex: string): number[] {
-  // Support 6-digit or 8-digit hex (ignoring alpha channel)
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i.exec(hex);
   return result ? [
     parseInt(result[1], 16),
@@ -567,7 +534,6 @@ function hexToRgb(hex: string): number[] {
   ] : [0, 0, 0];
 }
 
-// Whimsical colors matching the moon's magical vibe
 const BG_COLORS = [
   { p: 0.0, color: '#121212' },                         // Hero: Blackish grey
   { p: PHASES.SECTION2_END, color: '#69606c' },         // Section 2: Soft purple
@@ -581,13 +547,11 @@ function updateBackgroundColor(progress: number, el: HTMLElement): void {
   for (let i = 0; i < BG_COLORS.length - 1; i++) {
     const currentPhaseEnd = BG_COLORS[i + 1].p;
 
-    // The color transitions FAST just after the moon lands (over 0.04 progress)
     const transitionStart = currentPhaseEnd;
     const transitionEnd = currentPhaseEnd + 0.04;
 
     if (progress > transitionStart) {
       if (progress < transitionEnd) {
-        // We are inside the rapid crossfade window
         const factor = (progress - transitionStart) / (transitionEnd - transitionStart);
         const colorA = hexToRgb(BG_COLORS[i].color);
         const colorB = hexToRgb(BG_COLORS[i + 1].color);
@@ -597,7 +561,6 @@ function updateBackgroundColor(progress: number, el: HTMLElement): void {
           Math.round(colorA[2] + factor * (colorB[2] - colorA[2])),
         ] as number[];
       } else {
-        // We have fully transitioned to the new color
         activeColor = hexToRgb(BG_COLORS[i + 1].color);
       }
     }

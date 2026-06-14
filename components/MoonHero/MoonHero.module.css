@@ -1,10 +1,10 @@
 .outer {
-  height: 3000vh;
+  height: 1650vh;
   position: relative;
 }
 
 .sticky {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   height: 100vh;
@@ -85,133 +85,270 @@
 }
 
 /* ══════════════════════════════════════════════════
-   Section 2: Text on the LEFT (moon is on right)
+   Section 2: 4 Block Layout (Moon at bottom center)
    ══════════════════════════════════════════════════ */
 .section2Text {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding-left: 64px;
+  inset: 0;
   pointer-events: none;
   z-index: 20;
+}
+
+/* Moon boundary ring — visible when moon rests at bottom */
+.moonBoundaryRing {
+  position: absolute;
+  bottom: 4vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  pointer-events: none;
+  z-index: 15;
   opacity: 0;
   transition: none;
+  box-shadow:
+    inset 0 0 80px rgba(255, 255, 255, 0.04),
+    0 0 60px rgba(200, 190, 220, 0.08);
+}
+
+.s2Block {
+  position: absolute;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 240px;
+}
+
+/* Top-left: label + product title */
+.s2BlockTopLeft {
+  top: 16vh;
+  left: 8vw;
+}
+
+/* Top-right: intro description */
+.s2BlockTopRight {
+  top: 16vh;
+  right: 8vw;
+  text-align: left;
+  max-width: 260px;
+}
+
+/* Bottom-left: sub-label / ingredients-style */
+.s2BlockBottomLeft {
+  bottom: 12vh;
+  left: 8vw;
+}
+
+/* Bottom-right: CTA zone */
+.s2BlockBottomRight {
+  bottom: 12vh;
+  right: 8vw;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.s2Cta {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 100px;
+  padding: 10px 24px;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease;
+}
+
+.s2Cta:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.clipLine {
+  overflow: hidden;
+  line-height: 1.15;  /* tight — no gap above/below clip */
+  display: block;
+}
+
+.textLine {
+  display: block;
+  transform: translateY(100%);  /* starts below clip */
+  opacity: 0;
+  will-change: transform, opacity;
 }
 
 /* ══════════════════════════════════════════════════
-   Section 3: Complex layout on RIGHT
+   Section 3: Normal-scroll white panel
    ══════════════════════════════════════════════════ */
-.section3Content {
-  position: absolute;
-  right: 0;
-  top: 0;
+.section3Scroll {
+  position: relative;
   width: 100%;
-  height: 100%;
+  background: #f5f3f0;
+  display: flex;
+  align-items: stretch;
+  min-height: 70vh;
+  z-index: 30;
+  overflow: hidden;
+  margin-top: 25vh;
+}
+
+.section3Left {
+  flex: 1;
+  padding: 12vh 72px 12vh 80px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding-top: 14vh;
-  /* pushed down to avoid navbar */
-  pointer-events: none;
-  z-index: 20;
+  justify-content: center;
+  gap: 28px;
+  position: relative;
+  z-index: 2;
+}
+
+.section3Label {
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.38);
   opacity: 0;
-  transition: none;
+  transform: translateY(16px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
 }
 
-.section3Header {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 22px;
-}
-
-.section3HeadingTop {
+.section3Heading {
   font-family: var(--font-roc), sans-serif;
+  font-size: clamp(40px, 5.5vw, 80px);
   font-weight: 700;
-  font-size: clamp(34px, 4vw, 40px);
-  color: #d1c8cb;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  color: #0a0a0a;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
   margin: 0;
-  text-shadow: 0 0 40px rgba(255, 209, 220, 0.1);
   opacity: 0;
-  align-self: flex-end;
-  padding-right: 64px;
-}
-
-.section3HeadingBottom {
-  font-family: var(--font-roc), sans-serif;
-  font-weight: 700;
-  font-size: clamp(48px, 7vw, 96px);
-  color: #d1c8cb;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  margin: 0;
-  text-shadow: 0 0 40px rgba(255, 209, 220, 0.1);
-  opacity: 0;
-  width: 100%;
-  text-align: right;
-  padding-right: 64px;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s;
 }
 
 .section3Body {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  padding-right: 64px;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  color: rgba(0, 0, 0, 0.55);
+  max-width: 400px;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s ease 0.2s, transform 0.8s ease 0.2s;
 }
 
-.section3GridCol {
-  width: 50%;
-  /* right half */
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 16px;
+/* ── CTA Button ── */
+.section3Btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #0a0a0a;
+  color: #f5f3f0;
+  border: none;
+  border-radius: 100px;
+  padding: 14px 32px;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.8s ease 0.3s,
+    transform 0.8s ease 0.3s,
+    background 0.3s ease;
+}
+
+/* Ripple element injected on click */
+.section3Btn::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
   opacity: 0;
 }
 
-.gridText {
-  grid-column: 1 / 2;
-  grid-row: 1 / 2;
-  font-family: var(--font-spline-mono), monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.7);
-
-  padding: 16px;
-
+.section3Btn:hover {
+  background: #1a1a1a;
 }
 
-.gridImage {
-  background-size: cover;
-  background-position: center;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  aspect-ratio: 2 / 1;
-  /* keeping heights contained and equal */
+.section3Btn:active::after {
+  width: 300px;
+  height: 300px;
+  opacity: 1;
 }
 
-.gridImage:nth-of-type(2) {
-  grid-column: 2 / 3;
-  grid-row: 1 / 2;
+/* Arrow icon inside button */
+.btnArrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
 }
 
-.gridImage:nth-of-type(3) {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
+.section3Btn:hover .btnArrow {
+  transform: translateX(4px);
 }
 
-.gridImage:nth-of-type(4) {
-  grid-column: 2 / 3;
-  grid-row: 2 / 3;
+/* ── Visible state (JS adds this class) ── */
+.section3Visible .section3Label,
+.section3Visible .section3Heading,
+.section3Visible .section3Body,
+.section3Visible .section3Btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Right side: wave container ── */
+.section3Right {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 70vh;
+  background: #f5f3f0;
+}
+
+.waveCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Grid overlay — subtle dot grid like the reference */
+.section3Right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(0,0,0,0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Divider line between left and right ── */
+.section3Divider {
+  width: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  align-self: stretch;
+  flex-shrink: 0;
 }
 
 /* ── Shared text line styles (for Section 2) ── */
@@ -368,30 +505,16 @@
     justify-content: flex-start;
   }
 
-  .section3Content {
-    width: 100%;
-    padding-left: 24px;
-    padding-right: 24px;
-    padding-bottom: 10%;
+  .section3Scroll {
+    flex-direction: column;
   }
 
-  .section3HeadingTop {
-    align-self: flex-start;
-    padding-right: 0;
-    font-size: clamp(20px, 5vw, 32px);
+  .section3Left {
+    padding: 10vh 32px;
   }
 
-  .section3HeadingBottom {
-    font-size: clamp(32px, 8vw, 48px);
-    text-align: left;
-  }
-
-  .section3Body {
-    padding-right: 0;
-  }
-
-  .section3GridCol {
-    width: 100%;
+  .section3Right {
+    min-height: 50vh;
   }
 
   .sectionLine:nth-child(1) {

@@ -5,14 +5,14 @@ import { PHASES } from './types';
 const ROT_SPEED   = 0.005;  // radians per second
 const TARGET_FILL = 0.38;   // moon fills 38% of screen height on load
 
-// ── Section 2 Bézier: centre → RIGHT ──
+// ── Section 2 Bézier: centre → BOTTOM CENTRE (lower) ──
 const S2_START   = { x:  0,    y: -1.0, z: 0 };
-const S2_CONTROL = { x:  1.5,  y:  0.6, z: 0 };
-const S2_END     = { x:  3.0,  y: -0.8, z: 0 };
+const S2_CONTROL = { x:  0,    y: -1.4, z: 0 };
+const S2_END     = { x:  0,    y: -1.8, z: 0 };
 
-// ── Section 3 Bézier: RIGHT → LEFT ──
-const S3_START   = { x:  3.0,  y: -0.8, z: 0 }; // matches S2_END
-const S3_CONTROL = { x:  0,    y:  0.6, z: 0 };
+// ── Section 3 Bézier: BOTTOM CENTRE → LEFT ──
+const S3_START   = { x:  0,    y: -1.8, z: 0 }; // matches S2_END
+const S3_CONTROL = { x: -1.5,  y: -1.6, z: 0 };
 const S3_END     = { x: -2.8,  y: -1.4, z: 0 };
 
 // ── Section 4 Bézier: LEFT → MIDDLE BOTTOM ──

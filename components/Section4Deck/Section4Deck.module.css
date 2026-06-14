@@ -1,0 +1,253 @@
+/* ================================================================
+   Section4Deck.module.css
+   ================================================================ */
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  background: #f5f3f0;
+  z-index: 10;
+}
+
+.pinContainer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cardsStage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rem;
+}
+
+/* ── Side Left ── */
+.sideLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  align-items: flex-end;
+}
+
+.cardDesc {
+  position: relative;
+  min-height: 8rem;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 13px;
+  font-weight: 400;
+  color: #0a0a0a;
+  line-height: 1.8;
+  width: 100%;
+  max-width: 380px;
+}
+
+.descText {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  will-change: opacity, transform;
+}
+
+/* ── Side Right ── */
+.sideRight {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: 460px; /* match stackWrap height */
+}
+
+.rightTexts {
+  position: relative;
+  width: 100%;
+  height: 60px;
+}
+
+.rightText {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #0a0a0a;
+  text-transform: uppercase;
+  will-change: opacity, transform;
+  max-width: 300px;
+}
+
+.counter {
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: rgba(10, 10, 10, 0.4);
+}
+
+/* ── Stack ── */
+.stackWrap {
+  position: relative;
+  width: 360px;
+  height: 480px;
+  flex-shrink: 0;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  will-change: transform, opacity;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardInner {
+  position: absolute;
+  inset: 0;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Card divider ── */
+.cardDivider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.5rem;
+  opacity: 0;
+  will-change: opacity;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dividerLabel {
+  white-space: nowrap;
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #0a0a0a;
+}
+
+/* ── Mockup UI Elements ── */
+
+/* Bar Chart */
+.uiMockup {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 160px;
+  width: 80%;
+}
+
+.chartBar {
+  flex: 1;
+  background: linear-gradient(180deg, #333 0%, #111 100%);
+  border-radius: 4px 4px 0 0;
+  opacity: 0.8;
+}
+
+/* Grid Dashboard */
+.uiMockupGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 12px;
+  width: 80%;
+  height: 60%;
+}
+
+.gridItem {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Flowchart */
+.uiMockupFlow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.flowNode {
+  width: 120px;
+  height: 48px;
+  background: #0a0a0a;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.flowLine {
+  width: 2px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Circle Progress */
+.uiMockupCircle {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 12px solid rgba(0, 0, 0, 0.05);
+  border-top-color: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-45deg);
+}
+
+.circleInner {
+  transform: rotate(45deg);
+  font-family: var(--font-spline-mono), monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: #0a0a0a;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .sideLeft,
+  .sideRight {
+    display: none;
+  }
+
+  .stackWrap {
+    width: 300px;
+    height: 400px;
+  }
+
+  .cardsStage {
+    gap: 0;
+  }
+}

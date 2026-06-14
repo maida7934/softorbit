@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import MoonHero from '@/components/MoonHero';
 import PostMoon from '@/components/PostMoon';
+import Section4Deck from '@/components/Section4Deck';
 import Footer from '@/components/Footer';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -24,6 +25,7 @@ export default function Experience() {
   return (
     <>
       <MoonHero />
+      <Section4Deck />
       <PostMoon />
       <Footer />
     </>

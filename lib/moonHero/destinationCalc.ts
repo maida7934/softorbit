@@ -30,8 +30,8 @@ export function computeDestinations(
   const screenW = window.innerWidth;
   const screenH = window.innerHeight;
 
-  // Vertically centered on screen
-  const blockTop = (screenH - totalH) / 2;
+  // Vertically centered on screen, plus a downward offset to clear the navbar
+  const blockTop = ((screenH - totalH) / 2) + 120;
 
   // Calculate maximum line width to center the left-aligned block
   // (Left in for reference, but no longer used for centering)
