@@ -394,8 +394,6 @@ export default function MoonHero() {
           </button>
         </div>
 
-        <div className={styles.section3Divider} />
-
         <div className={styles.section3Right}>
           <canvas ref={waveCanvasRef} className={styles.waveCanvas} />
         </div>

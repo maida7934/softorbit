@@ -6,8 +6,8 @@ export default function Navbar() {
     <nav className={styles.navbar}>
       {/* Left: logo */}
       <div className={styles.logo}>
-        <div className={styles.logoTop}>soft</div>
-        <div className={styles.logoBottom}>orbit</div>
+        <div className={styles.logoTop}> SOFT </div>
+        <div className={styles.logoBottom}>ORBIT</div>
       </div>
 
       {/* Center: links */}
@@ -19,7 +19,7 @@ export default function Navbar() {
       </div>
 
       {/* Right: CTA */}
-      <button className={styles.navCta}>menu</button>
+      <button className={styles.navCta}>MENU</button>
     </nav>
   );
 }

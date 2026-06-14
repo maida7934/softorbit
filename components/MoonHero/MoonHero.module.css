@@ -1,5 +1,5 @@
 .outer {
-  height: 1650vh;
+  height: 2000vh;
   position: relative;
 }
 
@@ -197,7 +197,6 @@
   min-height: 70vh;
   z-index: 30;
   overflow: hidden;
-  margin-top: 25vh;
 }
 
 .section3Left {

@@ -11,16 +11,16 @@ export default function Footer() {
   const gridTextRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const moonWrapper = document.getElementById('moon-wrapper');
+    const moonWrapper = document.getElementById('section5-moon');
     const sticky = document.querySelector('[class*="sticky"]') as HTMLElement; // Get the MoonHero sticky container
     const footer = footerRef.current;
     const dotTarget = dotTargetRef.current;
     const gridText = gridTextRef.current;
-    
+
     if (!moonWrapper || !footer || !dotTarget || !gridText) return;
 
     // 1. Text slide up animation from the line
-    gsap.fromTo(gridText, 
+    gsap.fromTo(gridText,
       { y: '100%' },
       {
         y: '0%',
@@ -36,29 +36,39 @@ export default function Footer() {
 
     // 2. Moon shrink and background color change
     const trigger = ScrollTrigger.create({
+      id: 'footer-moon',
       trigger: footer,
-      start: 'top bottom', 
-      end: 'bottom bottom', 
+      start: 'top bottom',
+      end: 'bottom bottom',
       scrub: true,
+      onEnter: () => {
+        gsap.set(moonWrapper, { position: 'fixed', top: '50%', left: '50%' });
+      },
+      onLeaveBack: () => {
+        gsap.set(moonWrapper, { position: 'absolute', top: '50%', left: '50%', x: 0, y: 0, scale: 1 });
+      },
       onUpdate: (self) => {
-        const p = self.progress; 
-        
+        const p = self.progress;
+
         // Target dot position dynamically 
         const targetRect = dotTarget.getBoundingClientRect();
         const targetX = targetRect.left + targetRect.width / 2;
         const targetY = targetRect.top + targetRect.height / 2;
-        
+
         const startX = window.innerWidth / 2;
         const startY = window.innerHeight / 2;
-        
+
         const currentX = startX + (targetX - startX) * p;
         const currentY = startY + (targetY - startY) * p;
-        
+
         // Larger final scale for the moon dot
         const finalScale = 0.08;
         const scale = 1 - (1 - finalScale) * p;
-        
+
         gsap.set(moonWrapper, {
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
           x: currentX - startX,
           y: currentY - startY,
           scale: scale
@@ -79,7 +89,7 @@ export default function Footer() {
 
   return (
     <footer ref={footerRef} className={styles.footer}>
-      
+
       {/* Bottom half: Masked sliding text and absolute links */}
       <div className={styles.bottomSection}>
         <div className={styles.topRight}>

@@ -3,10 +3,11 @@
    ================================================================ */
 
 .wrapper {
-  position: relative;
+  position: sticky;
   width: 100%;
   background: #f5f3f0;
   z-index: 10;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .pinContainer {
@@ -65,7 +66,8 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  height: 460px; /* match stackWrap height */
+  height: 460px;
+  /* match stackWrap height */
 }
 
 .rightTexts {
@@ -205,7 +207,7 @@
   height: 48px;
   background: #0a0a0a;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .flowLine {
@@ -237,6 +239,7 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
+
   .sideLeft,
   .sideRight {
     display: none;
